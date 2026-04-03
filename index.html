@@ -88,7 +88,7 @@ h1{font-family:var(--display);font-size:clamp(36px,8vw,72px);font-weight:900;let
 /* ── SCROLL TRAJECTORY ── */
 .traj-section{margin:0 0 30px}
 .traj-intro{text-align:center;padding:14px;font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);margin-bottom:0}
-.traj-outer{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw;background:#000610;overflow:hidden}
+.traj-outer{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw;background:#000610}
 .traj-sticky{position:sticky;top:36px;height:calc(100vh - 36px);max-height:600px;overflow:hidden;background:#000610}
 #trajCanvas{width:100%;height:100%;display:block;background:#000610}
 .traj-side-panel{
@@ -616,7 +616,21 @@ window.toggleStage=function(i){
   const outer  = document.getElementById('trajOuter');
   if(!canvas || !outer) return;
   const ctx = canvas.getContext('2d');
-  let animPct = 0, targetPct = 0, rafId = null;
+  let animPct = 0, targetPct = 0;
+  let W = 0, H = 0;
+
+  // ── Resize canvas only when needed ──
+  function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = Math.min(window.innerHeight - 36, 600);
+    canvas.width  = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+  }
+  resizeCanvas();
+  window.addEventListener('resize', () => { resizeCanvas(); draw(animPct); });
 
   // Milestone stages along trajectory
   const MILESTONES = [
@@ -680,14 +694,11 @@ window.toggleStage=function(i){
   }
 
   function draw(pct) {
-    const W = window.innerWidth;
-    const H = Math.min(window.innerHeight - 36, 600);
     if(W === 0 || H === 0) return;
-    canvas.width  = W * (window.devicePixelRatio||1);
-    canvas.height = H * (window.devicePixelRatio||1);
-    canvas.style.width  = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+    const dpr = window.devicePixelRatio || 1;
+    // CRITICAL: use setTransform (not scale) so it doesn't compound
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Always fill background first
     ctx.fillStyle = '#000610';
     ctx.fillRect(0, 0, W, H);
 
@@ -879,7 +890,6 @@ window.toggleStage=function(i){
     requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
-  window.addEventListener('resize',()=>{ animPct=targetPct; draw(animPct); });
 })();
 
 
