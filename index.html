@@ -3,929 +3,1465 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Artemis II Live — Mission Control Tracker</title>
-<meta name="description" content="The most comprehensive Artemis II live tracker. Real-time telemetry, scroll trajectory, 12 mission stages, DSN status, signal delay, NASA news and more.">
+<title>Artemis II Live — Mission Control</title>
+<meta name="description" content="Track NASA's Artemis II live. Real-time distance, speed, signal delay, DSN, scroll trajectory, 12 mission stages and more.">
 <meta property="og:title" content="Artemis II Live — Mission Control">
-<meta property="og:description" content="Track humanity's return to the Moon — live distance, speed, signal delay, scroll trajectory and 12 mission stages.">
-<meta name="theme-color" content="#000a18">
+<meta property="og:description" content="Humanity's return to the Moon — live tracking, scroll trajectory, 12 mission stages.">
+<meta name="theme-color" content="#000913">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Cookie&display=swap" rel="stylesheet">
 <style>
+/* ════════════════════════════════════════
+   RESET & VARIABLES
+════════════════════════════════════════ */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#000a18;--panel:rgba(4,16,40,0.85);--panel2:rgba(2,10,28,0.95);
-  --border:rgba(255,140,0,0.18);--border2:rgba(255,140,0,0.08);
+  --bg:#000913;
+  --bg2:#030d22;
+  --panel:rgba(3,12,30,0.9);
   --orange:#ff8c00;--amber:#ffb700;--gold:#ffd60a;
   --red:#ff3d00;--green:#00ff88;--blue:#4dabf7;--cyan:#00d4ff;
-  --text:#e8d5b0;--dim:rgba(232,213,176,0.42);--dim2:rgba(232,213,176,0.25);
-  --mono:'Share Tech Mono',monospace;--display:'Orbitron',monospace;--body:'Barlow',sans-serif;
+  --text:#e8d5b0;--dim:rgba(232,213,176,0.4);--dim2:rgba(232,213,176,0.2);
+  --border:rgba(255,140,0,0.16);--border2:rgba(255,140,0,0.07);
+  --mono:'Share Tech Mono',monospace;
+  --display:'Orbitron',monospace;
+  --body:'Barlow',sans-serif;
+  --nav:42px;
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;font-size:15px;line-height:1.6}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden}
+
+/* ════════════════════════════════════════
+   STAR CANVAS
+════════════════════════════════════════ */
 #stars{position:fixed;inset:0;z-index:0;pointer-events:none}
-.page{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 18px 100px}
 
-/* ── TOPBAR ── */
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border2);font-family:var(--mono);font-size:9px;letter-spacing:0.18em;color:var(--dim)}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.viewer-count{display:flex;align-items:center;gap:6px;color:var(--green);font-size:9px}
-.vc-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:bl 1.5s infinite}
-.lang-btn{padding:4px 12px;border:1px solid var(--border);border-radius:20px;color:var(--orange);text-decoration:none;font-family:var(--mono);font-size:9px;letter-spacing:0.12em;transition:all 0.2s;background:rgba(255,140,0,0.04)}
-.lang-btn:hover{background:rgba(255,140,0,0.1)}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:0.2}}
-
-/* ── HEADER ── */
-header{text-align:center;padding:50px 0 32px;border-bottom:1px solid var(--border2)}
-.live-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9px;letter-spacing:0.35em;color:var(--red);border:1px solid rgba(255,61,0,0.3);background:rgba(255,61,0,0.07);border-radius:20px;padding:5px 16px;margin-bottom:20px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:bl 1s infinite}
-h1{font-family:var(--display);font-size:clamp(36px,8vw,72px);font-weight:900;letter-spacing:0.06em;background:linear-gradient(135deg,#ff6a00,#ffd60a 50%,#ff8c00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;margin-bottom:8px}
-.tagline{font-family:var(--mono);font-size:10px;letter-spacing:0.25em;color:var(--dim);margin-bottom:20px}
-.crew-strip{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin-bottom:16px}
-.cp{padding:4px 14px;border-radius:20px;background:rgba(255,140,0,0.06);border:1px solid rgba(255,140,0,0.2);color:rgba(255,200,120,0.85);font-family:var(--mono);font-size:9px;letter-spacing:0.1em}
-.phase-strip{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--orange);background:rgba(255,140,0,0.06);border:1px solid rgba(255,140,0,0.2);border-radius:6px;padding:6px 16px}
-
-/* ── LIVE STATS STRIP ── */
-.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
-@media(max-width:600px){.stats-strip{grid-template-columns:repeat(2,1fr)}}
-.ss{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;text-align:center}
-.ss::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:0.6}
-.ss-l{font-family:var(--mono);font-size:8px;letter-spacing:0.25em;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
-.ss-v{font-family:var(--display);font-size:20px;font-weight:700;color:var(--amber);letter-spacing:0.04em;line-height:1}
-.ss-u{font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px}
-
-/* ── JOURNEY BAR ── */
-.journey{margin:6px 0 20px;padding:16px 20px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
-.j-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:10px}
-.j-bar{height:10px;background:rgba(255,140,0,0.08);border-radius:20px;overflow:hidden;position:relative}
-.j-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#ff3d00,#ff8c00,#ffd60a);transition:width 1s linear;position:relative}
-.j-fill::after{content:'🚀';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:16px}
-.j-info{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--dim)}
-
-/* ── SECTION LABEL ── */
-.sec{font-family:var(--display);font-size:10px;letter-spacing:0.22em;color:var(--orange);text-transform:uppercase;margin:30px 0 14px;display:flex;align-items:center;gap:10px}
-.sec::after{content:'';flex:1;height:1px;background:var(--border2)}
-
-/* ── STICKY NAV BAR ── */
-.sticky-nav{
-  position:sticky;top:0;z-index:100;
-  background:rgba(0,5,15,0.96);
+/* ════════════════════════════════════════
+   STICKY NAV
+════════════════════════════════════════ */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:900;
+  height:var(--nav);
+  background:rgba(0,5,18,0.97);
   border-bottom:1px solid var(--border);
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(16px);
   display:flex;align-items:center;
   font-family:var(--mono);font-size:9px;
-  height:36px;overflow:hidden;
+  overflow:hidden;
 }
-.sn-phase{padding:0 14px;color:var(--orange);letter-spacing:0.12em;border-right:1px solid var(--border2);height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0}
-.sn-ticker{flex:1;overflow:hidden;height:100%;display:flex;align-items:center;padding:0 12px;color:var(--dim)}
-.sn-ticker-inner{white-space:nowrap;animation:ticker 30s linear infinite}
-@keyframes ticker{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
-.sn-right{display:flex;align-items:center;gap:0;height:100%;border-left:1px solid var(--border2);flex-shrink:0}
-.sn-stat{padding:0 12px;border-right:1px solid var(--border2);height:100%;display:flex;flex-direction:column;justify-content:center;white-space:nowrap}
-.sn-sl{font-size:7px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase}
-.sn-sv{font-size:10px;color:var(--amber);font-family:var(--display);font-weight:700}
-.sn-watch{padding:0 12px;display:flex;align-items:center;gap:5px;color:var(--green);font-size:9px}
-
-/* ── SCROLL TRAJECTORY ── */
-.traj-section{margin:0 0 30px}
-.traj-intro{text-align:center;padding:14px;font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);margin-bottom:0}
-.traj-outer{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw;background:#000610}
-.traj-sticky{position:sticky;top:36px;height:calc(100vh - 36px);max-height:600px;overflow:hidden;background:#000610}
-#trajCanvas{width:100%;height:100%;display:block;background:#000610}
-.traj-side-panel{
-  position:absolute;left:16px;top:50%;transform:translateY(-50%);
-  width:220px;background:rgba(0,8,20,0.88);
-  border:1px solid rgba(255,140,0,0.25);border-radius:10px;
-  padding:14px 16px;backdrop-filter:blur(8px);
-  pointer-events:none;transition:opacity 0.4s;
+.nav-phase{
+  padding:0 14px;
+  color:var(--orange);letter-spacing:0.12em;
+  border-right:1px solid var(--border2);
+  height:100%;display:flex;align-items:center;
+  flex-shrink:0;white-space:nowrap;
 }
-.tsp-stage{font-family:var(--mono);font-size:8px;letter-spacing:0.2em;color:var(--orange);margin-bottom:6px}
-.tsp-title{font-family:var(--display);font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:0.08em}
-.tsp-desc{font-size:11px;color:var(--dim);line-height:1.5;margin-bottom:10px}
-.tsp-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.tsp-stat{background:rgba(255,140,0,0.06);border:1px solid var(--border2);border-radius:4px;padding:5px 7px;text-align:center}
-.tsp-sv{font-family:var(--display);font-size:11px;color:var(--amber);font-weight:700}
-.tsp-sl{font-size:7px;color:var(--dim);letter-spacing:0.1em;margin-top:1px}
-.traj-bottom-bar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,6,15,0.9));padding:12px 16px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--dim);pointer-events:none}
-.traj-scroll-hint{text-align:center;padding:10px;font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:0.2em;animation:fadeUpDown 2s ease-in-out infinite;background:#000610}
-@keyframes fadeUpDown{0%,100%{opacity:0.4;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
-.traj-stages-spacer{height:2400px;background:#000610}
+.nav-ticker{
+  flex:1;overflow:hidden;height:100%;
+  display:flex;align-items:center;padding:0 10px;
+  color:var(--dim);mask-image:linear-gradient(90deg,transparent,black 5%,black 95%,transparent);
+}
+.nav-ticker-inner{
+  white-space:nowrap;
+  animation:ticker 35s linear infinite;
+  letter-spacing:0.06em;
+}
+@keyframes ticker{0%{transform:translateX(40vw)}100%{transform:translateX(-100%)}}
+.nav-right{
+  display:flex;align-items:center;
+  height:100%;
+  border-left:1px solid var(--border2);
+  flex-shrink:0;
+}
+.nav-stat{
+  padding:0 12px;border-right:1px solid var(--border2);
+  height:100%;display:flex;flex-direction:column;justify-content:center;
+  white-space:nowrap;
+}
+.nav-stat-l{font-size:7px;color:var(--dim);letter-spacing:0.2em;text-transform:uppercase}
+.nav-stat-v{font-family:var(--display);font-size:10px;font-weight:700;color:var(--amber)}
+.nav-watch{
+  padding:0 12px;display:flex;align-items:center;gap:5px;
+  color:var(--green);font-size:9px;letter-spacing:0.05em;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 8px var(--red);
+  animation:blink 1s ease-in-out infinite;flex-shrink:0;
+}
+.green-dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.15}}
+.lang-btn{
+  margin:0 10px;padding:4px 12px;
+  border:1px solid var(--border);border-radius:20px;
+  color:var(--orange);text-decoration:none;
+  font-family:var(--mono);font-size:9px;letter-spacing:0.12em;
+  transition:all 0.2s;background:rgba(255,140,0,0.04);
+  white-space:nowrap;
+}
+.lang-btn:hover{background:rgba(255,140,0,0.1)}
 
-/* ── SPLASHDOWN COUNTDOWN ── */
-.splash-card{background:linear-gradient(135deg,rgba(0,255,136,0.05),rgba(0,212,255,0.03));border:1px solid rgba(0,255,136,0.2);border-radius:12px;padding:18px 20px;margin-bottom:14px;text-align:center}
-.scd-label{font-family:var(--mono);font-size:9px;letter-spacing:0.3em;color:rgba(0,255,136,0.6);text-transform:uppercase;margin-bottom:10px}
-.scd-nums{display:flex;justify-content:center;gap:16px}
-.scd-unit{text-align:center}
-.scd-n{font-family:var(--display);font-size:32px;font-weight:700;color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.4)}
-.scd-l{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:0.15em;margin-top:3px}
-.scd-sep{font-family:var(--display);font-size:28px;color:rgba(0,255,136,0.3);padding-top:2px}
+/* ════════════════════════════════════════
+   PAGE WRAPPER
+════════════════════════════════════════ */
+.page{
+  position:relative;z-index:1;
+  max-width:1020px;margin:0 auto;
+  padding:calc(var(--nav) + 24px) 20px 80px;
+}
 
-/* ── SIGNAL + DSN ── */
+/* ════════════════════════════════════════
+   HERO
+════════════════════════════════════════ */
+.hero{text-align:center;padding:32px 0 28px;position:relative}
+.hero::after{
+  content:'';position:absolute;bottom:0;left:15%;right:15%;
+  height:1px;background:linear-gradient(90deg,transparent,var(--orange),transparent);
+}
+.live-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:9px;letter-spacing:0.35em;
+  color:var(--red);border:1px solid rgba(255,61,0,0.3);
+  background:rgba(255,61,0,0.07);border-radius:20px;
+  padding:5px 16px;margin-bottom:18px;
+}
+.hero-title{
+  font-family:var(--display);
+  font-size:clamp(40px,9vw,80px);
+  font-weight:900;letter-spacing:0.06em;
+  background:linear-gradient(135deg,#ff5500,#ffd60a 45%,#ff8c00);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1.05;margin-bottom:10px;
+}
+.hero-sub{
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:0.25em;color:var(--dim);margin-bottom:18px;
+}
+.crew-strip{
+  display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin-bottom:16px;
+}
+.crew-pill{
+  padding:4px 14px;border-radius:20px;
+  background:rgba(255,140,0,0.06);
+  border:1px solid rgba(255,140,0,0.2);
+  color:rgba(255,200,120,0.85);
+  font-family:var(--mono);font-size:9px;letter-spacing:0.1em;
+}
+.phase-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:10px;letter-spacing:0.12em;
+  color:var(--orange);background:rgba(255,140,0,0.06);
+  border:1px solid rgba(255,140,0,0.2);border-radius:6px;
+  padding:6px 16px;
+}
+
+/* ════════════════════════════════════════
+   HERO DISTANCE COUNTER
+════════════════════════════════════════ */
+.hero-dist{
+  text-align:center;padding:28px 0 20px;
+}
+.hd-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.4em;
+  color:var(--dim);text-transform:uppercase;margin-bottom:10px;
+}
+.hd-num{
+  font-family:var(--display);
+  font-size:clamp(52px,12vw,100px);
+  font-weight:900;letter-spacing:0.04em;
+  color:var(--amber);
+  text-shadow:0 0 60px rgba(255,183,0,0.4);
+  line-height:1;
+}
+.hd-unit{
+  font-family:var(--mono);font-size:12px;
+  color:var(--dim);margin-top:6px;letter-spacing:0.2em;
+}
+.hd-mi{font-size:13px;color:var(--dim);margin-top:5px;font-style:italic}
+
+/* ════════════════════════════════════════
+   JOURNEY BAR
+════════════════════════════════════════ */
+.journey{
+  padding:16px 20px;margin:6px 0 14px;
+  background:var(--panel);
+  border:1px solid var(--border);border-radius:12px;
+}
+.j-head{
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:10px;
+}
+.j-bar{
+  height:12px;background:rgba(255,140,0,0.07);
+  border-radius:20px;overflow:hidden;position:relative;
+}
+.j-fill{
+  height:100%;border-radius:20px;
+  background:linear-gradient(90deg,#ff3d00,#ff8c00,#ffd60a);
+  transition:width 1s linear;position:relative;
+}
+.j-fill::after{
+  content:'🚀';position:absolute;
+  right:-12px;top:50%;transform:translateY(-50%);
+  font-size:18px;line-height:1;
+}
+.j-info{
+  display:flex;justify-content:space-between;
+  margin-top:8px;font-family:var(--mono);
+  font-size:9px;color:var(--dim);
+}
+
+/* ════════════════════════════════════════
+   STATS STRIP
+════════════════════════════════════════ */
+.stats4{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:10px;margin-bottom:14px;
+}
+@media(max-width:600px){.stats4{grid-template-columns:repeat(2,1fr)}}
+.sc{
+  background:var(--panel);
+  border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;position:relative;overflow:hidden;text-align:center;
+}
+.sc::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--orange),transparent);
+  opacity:0.6;
+}
+.sc-l{
+  font-family:var(--mono);font-size:8px;letter-spacing:0.25em;
+  color:var(--dim);text-transform:uppercase;margin-bottom:6px;
+}
+.sc-v{
+  font-family:var(--display);font-size:20px;
+  font-weight:700;color:var(--amber);letter-spacing:0.03em;line-height:1;
+}
+.sc-u{font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px}
+
+/* ════════════════════════════════════════
+   COUNTDOWN
+════════════════════════════════════════ */
+.countdown{
+  background:linear-gradient(135deg,rgba(0,255,136,0.05),rgba(0,212,255,0.03));
+  border:1px solid rgba(0,255,136,0.18);border-radius:12px;
+  padding:16px 20px;margin-bottom:14px;text-align:center;
+}
+.cd-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.3em;
+  color:rgba(0,255,136,0.6);text-transform:uppercase;margin-bottom:10px;
+}
+.cd-nums{display:flex;justify-content:center;align-items:center;gap:12px}
+.cd-unit{text-align:center}
+.cd-n{
+  font-family:var(--display);font-size:34px;font-weight:700;
+  color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.4);line-height:1;
+}
+.cd-l{
+  font-family:var(--mono);font-size:8px;color:var(--dim);
+  letter-spacing:0.15em;margin-top:3px;
+}
+.cd-sep{
+  font-family:var(--display);font-size:28px;
+  color:rgba(0,255,136,0.25);padding-bottom:8px;
+}
+
+/* ════════════════════════════════════════
+   SECTION LABEL
+════════════════════════════════════════ */
+.sec{
+  font-family:var(--display);font-size:10px;letter-spacing:0.22em;
+  color:var(--orange);text-transform:uppercase;
+  margin:28px 0 12px;
+  display:flex;align-items:center;gap:10px;
+}
+.sec::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* ════════════════════════════════════════
+   SCROLL TRAJECTORY — FULL WIDTH
+   Uses a full-bleed container outside page
+════════════════════════════════════════ */
+.traj-wrap{
+  /* Full bleed from inside .page */
+  position:relative;
+  width:100vw;
+  left:50%;
+  transform:translateX(-50%);
+  background:#000610;
+  margin:0 0 28px;
+}
+.traj-label-bar{
+  text-align:center;padding:12px;
+  font-family:var(--mono);font-size:9px;letter-spacing:0.22em;
+  color:var(--dim);background:#000610;
+  border-bottom:1px solid var(--border2);
+}
+.traj-sticky-zone{
+  position:sticky;top:var(--nav);
+  height:calc(100vh - var(--nav));
+  max-height:580px;
+  overflow:hidden;
+  background:#000610;
+}
+#tc{width:100%;height:100%;display:block}
+.traj-side{
+  position:absolute;
+  left:20px;top:50%;transform:translateY(-50%);
+  width:220px;
+  background:rgba(0,6,20,0.92);
+  border:1px solid rgba(255,140,0,0.28);
+  border-radius:10px;padding:14px 16px;
+  backdrop-filter:blur(10px);
+  pointer-events:none;
+}
+.ts-stage{
+  font-family:var(--mono);font-size:8px;
+  letter-spacing:0.2em;color:var(--orange);margin-bottom:5px;
+}
+.ts-title{
+  font-family:var(--display);font-size:11px;font-weight:700;
+  color:var(--text);margin-bottom:8px;letter-spacing:0.07em;line-height:1.3;
+}
+.ts-desc{
+  font-size:11px;color:var(--dim);line-height:1.55;margin-bottom:10px;
+}
+.ts-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.ts-stat{
+  background:rgba(255,140,0,0.05);
+  border:1px solid var(--border2);border-radius:5px;
+  padding:5px 7px;text-align:center;
+}
+.ts-sv{
+  font-family:var(--display);font-size:11px;
+  color:var(--amber);font-weight:700;
+}
+.ts-sl{font-size:7px;color:var(--dim);letter-spacing:0.1em;margin-top:1px}
+.traj-bottom{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,6,15,0.95));
+  padding:10px 18px;
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:9px;color:var(--dim);
+  pointer-events:none;
+}
+.traj-spacer{height:2200px;background:#000610}
+.traj-hint{
+  text-align:center;padding:10px;
+  font-family:var(--mono);font-size:9px;letter-spacing:0.22em;
+  color:var(--dim);background:#000610;
+  border-top:1px solid var(--border2);
+  animation:updown 2s ease-in-out infinite;
+}
+@keyframes updown{0%,100%{opacity:0.4;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+
+/* ════════════════════════════════════════
+   TWO COL
+════════════════════════════════════════ */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 @media(max-width:640px){.two-col{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
-.card-title{font-family:var(--mono);font-size:9px;letter-spacing:0.25em;color:var(--dim);text-transform:uppercase;margin-bottom:12px}
-.sig-val{font-family:var(--display);font-size:26px;font-weight:700;color:var(--blue)}
-.sig-desc{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.5}
-.sig-bars{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;
+}
+.card-title{
+  font-family:var(--mono);font-size:9px;
+  letter-spacing:0.2em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:12px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+
+/* Signal */
+.sig-num{
+  font-family:var(--display);font-size:28px;
+  font-weight:700;color:var(--blue);
+}
+.sig-desc{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}
+.sig-bars{margin-top:12px;display:flex;flex-direction:column;gap:7px}
 .sb{display:flex;align-items:center;gap:6px;font-size:9px;font-family:var(--mono)}
-.sb-l{color:var(--dim);width:65px;font-size:8px}
+.sb-l{color:var(--dim);width:70px;font-size:8px}
 .sb-t{flex:1;height:4px;background:rgba(77,171,247,0.1);border-radius:2px;overflow:hidden}
 .sb-f{height:100%;border-radius:2px;transition:width 0.5s}
-.sb-v{color:var(--blue);font-size:8px;width:40px;text-align:right}
-.dsn-stations{display:flex;flex-direction:column;gap:6px}
-.dst{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;transition:border-color 0.3s}
-.dst.active{border-color:rgba(0,255,136,0.35);background:rgba(0,255,136,0.04)}
-.dst-icon{font-size:18px}
-.dst-info{flex:1}
-.dst-name{font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:0.1em}
-.dst.active .dst-name{color:var(--green)}
-.dst-loc{font-size:9px;color:var(--dim);font-family:var(--mono)}
-.dst-sig{font-size:9px;font-family:var(--mono)}
+.sb-v{font-size:8px;width:42px;text-align:right}
 
-/* ── STAGE CARDS ── */
-.stages-grid{display:flex;flex-direction:column;gap:0}
-.stage-card{border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:10px;transition:border-color 0.3s}
-.stage-card.active{border-color:rgba(255,214,10,0.4);background:rgba(255,214,10,0.02)}
-.stage-card.done{border-color:rgba(255,140,0,0.25)}
-.stage-head{padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
-.stage-num{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:0.15em;color:var(--dim);width:44px;flex-shrink:0}
-.stage-num.active{color:var(--gold)}
-.stage-num.done{color:var(--orange)}
-.stage-title{flex:1;font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--dim)}
-.stage-title.active{color:var(--gold)}
-.stage-title.done{color:var(--text)}
-.stage-time{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:0.08em}
-.stage-badge{padding:3px 10px;border-radius:10px;font-family:var(--mono);font-size:8px;letter-spacing:0.1em}
-.stage-badge.done{background:rgba(255,140,0,0.1);color:var(--orange);border:1px solid rgba(255,140,0,0.2)}
-.stage-badge.active{background:rgba(255,214,10,0.1);color:var(--gold);border:1px solid rgba(255,214,10,0.3);animation:bl 1.5s infinite}
-.stage-badge.future{background:rgba(255,255,255,0.03);color:var(--dim2);border:1px solid rgba(255,255,255,0.05)}
-.stage-body{display:none;padding:0 18px 18px;border-top:1px solid var(--border2)}
-.stage-body.open{display:block;animation:fadeIn 0.25s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.stage-desc{font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:14px;margin-top:14px}
-.stage-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
-.stage-stat{background:rgba(255,140,0,0.04);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;text-align:center}
-.stage-stat-v{font-family:var(--display);font-size:15px;font-weight:700;color:var(--amber);margin-bottom:2px}
-.stage-stat-l{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:0.1em}
-.stage-facts{margin-top:10px}
-.stage-fact{font-size:12px;color:var(--dim);padding:4px 0;border-bottom:1px solid var(--border2);line-height:1.5}
-.stage-fact:last-child{border-bottom:none}
+/* DSN */
+.dsn-list{display:flex;flex-direction:column;gap:7px}
+.dsn-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border-radius:7px;
+  border:1px solid var(--border2);
+  transition:border-color 0.3s,background 0.3s;
+}
+.dsn-item.on{
+  border-color:rgba(0,255,136,0.35);
+  background:rgba(0,255,136,0.04);
+}
+.dsn-icon{font-size:16px}
+.dsn-info{flex:1}
+.dsn-name{
+  font-family:var(--display);font-size:9px;
+  font-weight:700;letter-spacing:0.1em;color:var(--dim);
+}
+.dsn-item.on .dsn-name{color:var(--green)}
+.dsn-loc{font-size:9px;color:var(--dim2);font-family:var(--mono)}
+.dsn-sig{font-size:9px;font-family:var(--mono)}
+
+/* ════════════════════════════════════════
+   RECORD CARD
+════════════════════════════════════════ */
+.record{
+  background:linear-gradient(135deg,rgba(255,214,10,0.05),rgba(255,140,0,0.03));
+  border:1px solid rgba(255,214,10,0.22);
+  border-radius:12px;padding:18px 20px;margin-bottom:14px;
+}
+.record-row{display:flex;align-items:center;gap:16px}
+.record-icon{font-size:30px}
+.record-info{flex:1}
+.record-sub{
+  font-family:var(--mono);font-size:8px;letter-spacing:0.2em;
+  color:rgba(255,214,10,0.55);text-transform:uppercase;margin-bottom:5px;
+}
+.record-main{
+  font-family:var(--display);font-size:17px;
+  font-weight:700;color:var(--gold);margin-bottom:4px;
+}
+.record-desc{font-size:12px;color:var(--dim);line-height:1.5}
+.record-badge{
+  display:inline-block;margin-top:6px;
+  padding:3px 12px;border-radius:20px;
+  background:rgba(255,214,10,0.1);
+  border:1px solid rgba(255,214,10,0.25);
+  font-family:var(--mono);font-size:8px;letter-spacing:0.12em;color:var(--gold);
+}
+.record-num{
+  text-align:center;flex-shrink:0;
+  font-family:var(--display);font-size:26px;
+  font-weight:900;color:var(--gold);
+}
+.record-num-l{font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:2px}
+
+/* ════════════════════════════════════════
+   MISSION STAGES
+════════════════════════════════════════ */
+.stages{display:flex;flex-direction:column;gap:0;margin-bottom:20px}
+.stage{
+  border:1px solid var(--border2);border-radius:10px;
+  overflow:hidden;margin-bottom:8px;
+  transition:border-color 0.3s;
+}
+.stage.done{border-color:rgba(255,140,0,0.2)}
+.stage.live{border-color:rgba(255,214,10,0.35);background:rgba(255,214,10,0.015)}
+.stage-head{
+  padding:12px 16px;display:flex;align-items:center;
+  gap:12px;cursor:pointer;user-select:none;
+}
+.stage-num{
+  font-family:var(--display);font-size:9px;
+  font-weight:700;letter-spacing:0.12em;color:var(--dim2);
+  width:48px;flex-shrink:0;
+}
+.stage.done .stage-num{color:var(--orange)}
+.stage.live .stage-num{color:var(--gold)}
+.stage-title{
+  flex:1;font-family:var(--display);font-size:10px;
+  font-weight:700;letter-spacing:0.08em;color:var(--dim);
+}
+.stage.done .stage-title{color:var(--text)}
+.stage.live .stage-title{color:var(--gold)}
+.stage-time{
+  font-family:var(--mono);font-size:9px;color:var(--dim2);
+  letter-spacing:0.06em;flex-shrink:0;
+}
+.stage-badge{
+  padding:3px 10px;border-radius:10px;
+  font-family:var(--mono);font-size:8px;letter-spacing:0.1em;
+  flex-shrink:0;
+}
+.badge-done{
+  background:rgba(255,140,0,0.1);color:var(--orange);
+  border:1px solid rgba(255,140,0,0.2);
+}
+.badge-live{
+  background:rgba(255,214,10,0.1);color:var(--gold);
+  border:1px solid rgba(255,214,10,0.25);animation:blink 1.5s infinite;
+}
+.badge-future{
+  background:rgba(255,255,255,0.03);color:var(--dim2);
+  border:1px solid rgba(255,255,255,0.06);
+}
+.stage-body{
+  display:none;padding:0 16px 16px;
+  border-top:1px solid var(--border2);
+  animation:fadeIn 0.2s ease;
+}
+.stage-body.open{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.stage-desc{
+  font-size:13px;color:var(--dim);line-height:1.7;
+  margin:14px 0 12px;
+}
+.stage-stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
+  gap:7px;margin-bottom:10px;
+}
+.stage-stat{
+  background:rgba(255,140,0,0.04);
+  border:1px solid var(--border2);border-radius:6px;
+  padding:8px 10px;text-align:center;
+}
+.stage-stat-v{
+  font-family:var(--display);font-size:14px;
+  font-weight:700;color:var(--amber);margin-bottom:2px;
+}
+.stage-stat-l{font-family:var(--mono);font-size:7px;color:var(--dim);letter-spacing:0.1em}
+.stage-facts{margin-top:8px}
+.stage-fact{
+  font-size:12px;color:var(--dim);
+  padding:4px 0;border-bottom:1px solid var(--border2);line-height:1.5;
+}
+.stage-fact:last-child{border:none}
 .stage-fact::before{content:'→ ';color:var(--orange)}
 
-/* ── CREW ── */
-.crew4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+/* ════════════════════════════════════════
+   CREW
+════════════════════════════════════════ */
+.crew4{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:10px;margin-bottom:20px;
+}
 @media(max-width:600px){.crew4{grid-template-columns:repeat(2,1fr)}}
-.cc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
-.cc-em{font-size:30px;margin-bottom:8px}
-.cc-name{font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--amber);margin-bottom:4px}
-.cc-role{font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:4px}
-.cc-record{font-size:10px;color:var(--orange);font-style:italic;margin-top:4px;line-height:1.4}
-.cc-ag{display:inline-block;font-size:8px;padding:2px 8px;border-radius:10px;background:rgba(255,140,0,0.07);border:1px solid rgba(255,140,0,0.2);color:var(--orange);font-family:var(--mono)}
+.cc{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:16px;text-align:center;
+}
+.cc.star{border-color:rgba(255,214,10,0.3);background:rgba(255,214,10,0.02)}
+.cc-em{font-size:28px;margin-bottom:8px}
+.cc-name{
+  font-family:var(--display);font-size:9px;font-weight:700;
+  letter-spacing:0.1em;color:var(--amber);margin-bottom:4px;
+}
+.cc.star .cc-name{color:var(--gold)}
+.cc-role{font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:5px}
+.cc-badge{
+  display:inline-block;font-size:8px;padding:2px 8px;
+  border-radius:10px;background:rgba(255,140,0,0.07);
+  border:1px solid rgba(255,140,0,0.18);color:var(--orange);
+  font-family:var(--mono);letter-spacing:0.08em;
+}
+.cc.star .cc-badge{color:var(--gold);border-color:rgba(255,214,10,0.3);background:rgba(255,214,10,0.08)}
+.cc-record{
+  font-size:10px;color:var(--orange);
+  font-style:italic;margin-top:5px;line-height:1.4;
+}
+.cc.star .cc-record{color:var(--gold)}
 
-/* ── NEWS FEED ── */
-.news-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
-.news-item{background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;text-decoration:none;transition:border-color 0.2s}
-.news-item:hover{border-color:rgba(255,140,0,0.3)}
-.news-src{font-family:var(--mono);font-size:8px;letter-spacing:0.1em;padding:2px 8px;border-radius:10px;background:rgba(255,140,0,0.08);border:1px solid rgba(255,140,0,0.2);color:var(--orange);white-space:nowrap;flex-shrink:0;margin-top:2px}
+/* ════════════════════════════════════════
+   NEWS
+════════════════════════════════════════ */
+.news{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.news-item{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--panel);border:1px solid var(--border2);
+  border-radius:8px;padding:13px 16px;
+  text-decoration:none;transition:border-color 0.2s;
+}
+.news-item:hover{border-color:rgba(255,140,0,0.28)}
+.news-src{
+  font-family:var(--mono);font-size:8px;letter-spacing:0.1em;
+  padding:2px 8px;border-radius:10px;
+  background:rgba(255,140,0,0.07);border:1px solid rgba(255,140,0,0.18);
+  color:var(--orange);white-space:nowrap;flex-shrink:0;margin-top:2px;
+}
 .news-body{flex:1}
-.news-title{font-size:13px;color:var(--text);font-weight:500;line-height:1.4;margin-bottom:4px}
-.news-age{font-family:var(--mono);font-size:9px;color:var(--dim)}
+.news-title{font-size:13px;color:var(--text);font-weight:500;line-height:1.4;margin-bottom:3px}
+.news-age{font-family:var(--mono);font-size:9px;color:var(--dim2)}
 
-/* ── EMAIL SIGNUP ── */
-.email-card{background:linear-gradient(135deg,rgba(0,212,255,0.05),rgba(77,171,247,0.03));border:1px solid rgba(77,171,247,0.2);border-radius:12px;padding:24px;text-align:center;margin-bottom:22px}
-.email-title{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:0.15em;color:var(--blue);margin-bottom:8px}
-.email-desc{font-size:13px;color:var(--dim);margin-bottom:16px}
+/* ════════════════════════════════════════
+   EMAIL
+════════════════════════════════════════ */
+.email-card{
+  background:linear-gradient(135deg,rgba(0,212,255,0.05),rgba(77,171,247,0.03));
+  border:1px solid rgba(77,171,247,0.18);border-radius:12px;
+  padding:22px;text-align:center;margin-bottom:20px;
+}
+.email-title{
+  font-family:var(--display);font-size:12px;font-weight:700;
+  letter-spacing:0.15em;color:var(--blue);margin-bottom:7px;
+}
+.email-desc{font-size:13px;color:var(--dim);margin-bottom:15px}
 .email-form{display:flex;gap:8px;max-width:420px;margin:0 auto}
-.email-input{flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(77,171,247,0.25);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border-color 0.2s}
+.email-input{
+  flex:1;background:rgba(0,0,0,0.35);
+  border:1px solid rgba(77,171,247,0.22);border-radius:6px;
+  padding:10px 14px;color:var(--text);
+  font-family:var(--mono);font-size:12px;outline:none;
+  transition:border-color 0.2s;
+}
 .email-input:focus{border-color:var(--blue)}
 .email-input::placeholder{color:var(--dim2)}
-.email-btn{background:var(--blue);color:#000a18;border:none;border-radius:6px;padding:10px 18px;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:0.1em;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.email-btn{
+  background:var(--blue);color:#000a18;border:none;
+  border-radius:6px;padding:10px 18px;
+  font-family:var(--display);font-size:9px;font-weight:700;
+  letter-spacing:0.1em;cursor:pointer;transition:all 0.2s;white-space:nowrap;
+}
 .email-btn:hover{background:var(--cyan);transform:translateY(-1px)}
 .email-note{font-size:10px;color:var(--dim2);margin-top:8px;font-family:var(--mono)}
 
-/* ── RECORD ── */
-.record-card{background:linear-gradient(135deg,rgba(255,214,10,0.06),rgba(255,140,0,0.04));border:1px solid rgba(255,214,10,0.25);border-radius:12px;padding:18px 20px;margin-bottom:14px}
-.rec-row{display:flex;align-items:center;gap:16px}
-.rec-icon{font-size:32px}
-.rec-info{flex:1}
-.rec-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:rgba(255,214,10,0.6);text-transform:uppercase;margin-bottom:6px}
-.rec-val{font-family:var(--display);font-size:18px;font-weight:700;color:var(--gold);margin-bottom:4px}
-.rec-desc{font-size:12px;color:var(--dim);line-height:1.5}
-.rec-badge{padding:4px 12px;border-radius:20px;background:rgba(255,214,10,0.1);border:1px solid rgba(255,214,10,0.3);font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--gold);display:inline-block;margin-top:6px}
+/* ════════════════════════════════════════
+   FACTS
+════════════════════════════════════════ */
+.facts{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:8px;margin-bottom:20px;
+}
+.fact{
+  background:var(--panel);border:1px solid var(--border2);
+  border-radius:8px;padding:12px 14px;display:flex;gap:10px;
+}
+.fact-i{font-size:18px;flex-shrink:0;margin-top:1px}
+.fact-t{font-size:12px;color:var(--dim);line-height:1.5}
+.fact-t strong{color:var(--text);display:block;margin-bottom:2px}
 
-/* ── FACTS ── */
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-bottom:22px}
-.fact{background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;display:flex;gap:10px}
-.fi{font-size:18px;flex-shrink:0;margin-top:1px}
-.ft{font-size:12px;color:var(--dim);line-height:1.5}
-.ft strong{color:var(--text);display:block;margin-bottom:2px}
-
-/* ── UPCOMING ── */
-.upcoming{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+/* ════════════════════════════════════════
+   UPCOMING MISSIONS
+════════════════════════════════════════ */
+.upcoming{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;margin-bottom:20px;
+}
 @media(max-width:580px){.upcoming{grid-template-columns:1fr}}
-.uc{background:var(--panel);border:1px solid var(--border2);border-radius:10px;padding:16px;text-align:center;opacity:0.7}
-.uc-name{font-family:var(--display);font-size:11px;font-weight:700;color:var(--dim);margin-bottom:4px;letter-spacing:0.1em}
-.uc-desc{font-size:11px;color:var(--dim2);margin-bottom:6px}
+.uc{
+  background:var(--panel);border:1px solid var(--border2);
+  border-radius:10px;padding:16px;text-align:center;opacity:0.65;
+}
+.uc-name{
+  font-family:var(--display);font-size:10px;font-weight:700;
+  color:var(--dim);margin-bottom:5px;letter-spacing:0.1em;
+}
+.uc-desc{font-size:11px;color:var(--dim2);margin-bottom:5px;line-height:1.4}
 .uc-date{font-family:var(--mono);font-size:9px;color:var(--dim2);letter-spacing:0.1em}
 
-/* ── PAYPAL ── */
-.paypal-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#003087,#009cde);color:white;padding:12px 28px;border-radius:30px;font-family:var(--display);font-size:11px;letter-spacing:0.1em;text-decoration:none;box-shadow:0 4px 24px rgba(0,156,222,0.35);transition:all 0.2s;margin:16px 0;font-weight:700}
-.paypal-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,156,222,0.55)}
+/* ════════════════════════════════════════
+   NASA STREAM
+════════════════════════════════════════ */
+.stream{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;margin-bottom:20px;
+}
+.stream-head{
+  padding:11px 18px;border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:9px;letter-spacing:0.18em;color:var(--dim);
+}
+.stream-body{padding:20px;text-align:center}
 
-/* ── NASA STREAM ── */
-.stream-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:22px}
-.stream-head{padding:11px 18px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim)}
-.stream-cta{padding:20px;text-align:center}
-
-/* ── FOOTER ── */
-footer{text-align:center;padding:30px 0;border-top:1px solid var(--border2)}
-footer p{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;color:var(--dim);margin-top:14px;line-height:2}
-.foot-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:10px}
-.foot-link{color:var(--orange);text-decoration:none;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;border:1px solid rgba(255,140,0,0.2);padding:5px 12px;border-radius:6px;transition:all 0.2s}
+/* ════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════ */
+footer{
+  text-align:center;padding:28px 0;
+  border-top:1px solid var(--border2);
+}
+.paypal-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#003087,#009cde);
+  color:white;padding:12px 28px;border-radius:30px;
+  font-family:var(--display);font-size:11px;letter-spacing:0.1em;
+  text-decoration:none;font-weight:700;
+  box-shadow:0 4px 24px rgba(0,156,222,0.3);
+  transition:all 0.2s;margin:16px 0;
+}
+.paypal-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,156,222,0.5)}
+.foot-links{
+  display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px;
+}
+.foot-link{
+  color:var(--orange);text-decoration:none;
+  font-family:var(--mono);font-size:9px;letter-spacing:0.1em;
+  border:1px solid rgba(255,140,0,0.18);padding:5px 12px;
+  border-radius:6px;transition:all 0.2s;
+}
 .foot-link:hover{background:rgba(255,140,0,0.08);border-color:var(--orange)}
+footer p{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.08em;
+  color:var(--dim2);margin-top:14px;line-height:2.2;
+}
 </style>
 </head>
 <body>
 <canvas id="stars"></canvas>
+
+<!-- ══ STICKY NAV ══ -->
+<nav class="nav">
+  <div class="nav-phase">⚡ <span id="navPhase">TRANSIT</span></div>
+  <div class="nav-ticker">
+    <div class="nav-ticker-inner">
+      🚀 Artemis II · Orion "Integrity" &nbsp;·&nbsp; Jeremy Hansen — first Canadian in deep space &nbsp;·&nbsp; TLI burn complete &nbsp;·&nbsp; Crew heading to the Moon &nbsp;·&nbsp; Lunar flyby ~April 7 &nbsp;·&nbsp; Splashdown ~April 11
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-stat"><div class="nav-stat-l">MET</div><div class="nav-stat-v" id="navMet">--d--:--</div></div>
+    <div class="nav-stat"><div class="nav-stat-l">SPEED</div><div class="nav-stat-v" id="navSpd">-- mph</div></div>
+    <div class="nav-stat"><div class="nav-stat-l">DIST</div><div class="nav-stat-v" id="navDist">--K mi</div></div>
+    <div class="nav-watch"><div class="live-dot green-dot"></div><span id="navWatch">--</span></div>
+    <a class="lang-btn" href="fr.html">🇫🇷 FR</a>
+  </div>
+</nav>
+
 <div class="page">
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <span id="utcClock">UTC 00:00:00 · 2026-04-04</span>
-    <div class="topbar-right">
-      <div class="viewer-count"><div class="vc-dot"></div><span id="viewerCount">47</span> watching</div>
-      <a class="lang-btn" href="fr.html">🇫🇷 Français</a>
-    </div>
-  </div>
-
-  <!-- STICKY NAV BAR -->
-  <div class="sticky-nav">
-    <div class="sn-phase">⚡ <span id="snPhase">TRANSIT</span></div>
-    <div class="sn-ticker"><div class="sn-ticker-inner">🚀 Artemis II · Orion "Integrity" heading to the Moon · Jeremy Hansen becomes first Canadian in deep space · Crew completes systems checkout · TLI burn successful · T+<span id="snDay">2</span> days and counting · Next milestone: Lunar Flyby April 7</div></div>
-    <div class="sn-right">
-      <div class="sn-stat"><div class="sn-sl">MET</div><div class="sn-sv" id="snMet">--d--:--:--</div></div>
-      <div class="sn-stat"><div class="sn-sl">SPEED</div><div class="sn-sv" id="snSpd">-- mph</div></div>
-      <div class="sn-stat"><div class="sn-sl">DISTANCE</div><div class="sn-sv" id="snDist">-- mi</div></div>
-      <div class="sn-watch"><div class="vc-dot"></div><span id="snWatch">47</span></div>
-    </div>
-  </div>
-
-  <!-- HEADER -->
-  <header>
-    <div class="live-badge"><div class="live-dot"></div>LIVE MISSION DATA · DAY <span id="dayNum">3</span></div>
-    <h1>ARTEMIS II</h1>
-    <div class="tagline">HUMANITY'S RETURN TO THE MOON · APRIL 2026</div>
+  <!-- ══ HERO ══ -->
+  <div class="hero">
+    <div class="live-badge"><div class="live-dot"></div>LIVE · DAY <span id="dayNum">3</span></div>
+    <div class="hero-title">ARTEMIS II</div>
+    <div class="hero-sub">HUMANITY'S RETURN TO THE MOON · APRIL 2026</div>
     <div class="crew-strip">
-      <span class="cp">🇺🇸 Cmdr. Reid Wiseman</span>
-      <span class="cp">🇺🇸 Pilot Victor Glover</span>
-      <span class="cp">🇺🇸 MS Christina Koch</span>
-      <span class="cp">🇨🇦 MS Jeremy Hansen</span>
+      <span class="crew-pill">🇺🇸 Cmdr. Reid Wiseman</span>
+      <span class="crew-pill">🇺🇸 Pilot Victor Glover</span>
+      <span class="crew-pill">🇺🇸 MS Christina Koch</span>
+      <span class="crew-pill">🇨🇦 MS Jeremy Hansen</span>
     </div>
-    <div class="phase-strip">⚡ <span id="phaseText">TRANSLUNAR COAST → MOON</span></div>
-  </header>
-
-  <!-- STATS STRIP -->
-  <div class="stats-strip" style="margin-top:20px">
-    <div class="ss"><div class="ss-l">Distance · Earth</div><div class="ss-v" id="ssDist">---</div><div class="ss-u" id="ssDistMi">--- miles</div></div>
-    <div class="ss"><div class="ss-l">Speed</div><div class="ss-v" id="ssSpd">---</div><div class="ss-u">km/s · <span id="ssSpdMph">---</span> mph</div></div>
-    <div class="ss"><div class="ss-l">Mission Time</div><div class="ss-v" id="ssMet" style="font-size:14px">---</div><div class="ss-u">elapsed</div></div>
-    <div class="ss"><div class="ss-l">To Moon</div><div class="ss-v" id="ssToMoon">---</div><div class="ss-u">kilometers</div></div>
+    <div class="phase-pill">⚡ <span id="phaseText">TRANSLUNAR COAST → MOON</span></div>
   </div>
 
-  <!-- JOURNEY BAR -->
+  <!-- ══ HERO DISTANCE ══ -->
+  <div class="hero-dist">
+    <div class="hd-label">Current Distance from Earth</div>
+    <div class="hd-num" id="hdKm">---</div>
+    <div class="hd-unit">KILOMETERS</div>
+    <div class="hd-mi" id="hdMi">--- miles from Earth</div>
+  </div>
+
+  <!-- ══ JOURNEY BAR ══ -->
   <div class="journey">
-    <div class="j-labels"><span>🌍 EARTH</span><span id="jPct" style="color:var(--orange)">0%</span><span>🌕 MOON &amp; BACK</span></div>
+    <div class="j-head">
+      <span>🌍 EARTH</span>
+      <span id="jPct" style="color:var(--orange)">0%</span>
+      <span>🌕 MOON &amp; BACK</span>
+    </div>
     <div class="j-bar"><div class="j-fill" id="jFill" style="width:0%"></div></div>
     <div class="j-info">
-      <span>MET: <span id="jMet" style="color:var(--orange)">---</span></span>
-      <span>Signal delay: <span id="jSig" style="color:var(--blue)">--- s</span></span>
-      <span>Speed: <span id="jSpd" style="color:var(--orange)">---</span> km/h</span>
+      <span>MET: <span id="jMet" style="color:var(--orange)">--</span></span>
+      <span>Signal: <span id="jSig" style="color:var(--blue)">--s</span></span>
+      <span><span id="jSpd" style="color:var(--orange)">--</span> km/h</span>
     </div>
   </div>
 
-  <!-- SPLASHDOWN COUNTDOWN -->
-  <div class="splash-card">
-    <div class="scd-label">⏱ Splashdown Countdown · ~April 11, 2026</div>
-    <div class="scd-nums">
-      <div class="scd-unit"><div class="scd-n" id="cdD">--</div><div class="scd-l">DAYS</div></div>
-      <div class="scd-sep">:</div>
-      <div class="scd-unit"><div class="scd-n" id="cdH">--</div><div class="scd-l">HRS</div></div>
-      <div class="scd-sep">:</div>
-      <div class="scd-unit"><div class="scd-n" id="cdM">--</div><div class="scd-l">MIN</div></div>
-      <div class="scd-sep">:</div>
-      <div class="scd-unit"><div class="scd-n" id="cdS">--</div><div class="scd-l">SEC</div></div>
+  <!-- ══ STATS STRIP ══ -->
+  <div class="stats4">
+    <div class="sc"><div class="sc-l">Distance · km</div><div class="sc-v" id="s1">---</div><div class="sc-u" id="s1u">--- miles</div></div>
+    <div class="sc"><div class="sc-l">Speed</div><div class="sc-v" id="s2">---</div><div class="sc-u" id="s2u">--- km/h</div></div>
+    <div class="sc"><div class="sc-l">Mission Time</div><div class="sc-v" id="s3" style="font-size:14px">---</div><div class="sc-u">elapsed</div></div>
+    <div class="sc"><div class="sc-l">To Moon</div><div class="sc-v" id="s4">---</div><div class="sc-u">kilometers</div></div>
+  </div>
+
+  <!-- ══ SPLASHDOWN COUNTDOWN ══ -->
+  <div class="countdown">
+    <div class="cd-label">⏱ Splashdown Countdown · ~April 11, 2026</div>
+    <div class="cd-nums">
+      <div class="cd-unit"><div class="cd-n" id="cdD">--</div><div class="cd-l">DAYS</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-n" id="cdH">--</div><div class="cd-l">HRS</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-n" id="cdM">--</div><div class="cd-l">MIN</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-n" id="cdS">--</div><div class="cd-l">SEC</div></div>
     </div>
   </div>
 
-  <!-- SCROLL TRAJECTORY -->
+  <!-- ══ TRAJECTORY LABEL ══ -->
   <div class="sec">Interactive Trajectory</div>
-  <div class="traj-intro">↓ SCROLL TO FLY ORION FROM EARTH TO THE MOON AND BACK</div>
-  <div class="traj-outer" id="trajOuter">
-    <div class="traj-sticky">
-      <canvas id="trajCanvas"></canvas>
-      <!-- Side info panel -->
-      <div class="traj-side-panel" id="trajPanel">
-        <div class="tsp-stage" id="tspStage">STAGE 07</div>
-        <div class="tsp-title" id="tspTitle">OUTBOUND COAST</div>
-        <div class="tsp-desc" id="tspDesc">Coasting through deep space toward the Moon. The crew experiences the Overview Effect as Earth shrinks to a marble.</div>
-        <div class="tsp-stats">
-          <div class="tsp-stat"><div class="tsp-sv" id="tspV1">4 days</div><div class="tsp-sl">Duration</div></div>
-          <div class="tsp-stat"><div class="tsp-sv" id="tspV2">240K mi</div><div class="tsp-sl">Distance</div></div>
-        </div>
-      </div>
-      <div class="traj-bottom-bar">
-        <span id="trajLive" style="color:var(--green)">● LIVE: <span id="trajLiveDist">---</span> from Earth</span>
-        <span id="trajScrollPct" style="color:var(--orange)">Scroll: 0%</span>
+
+</div><!-- END .page (trajectory is full-bleed) -->
+
+<!-- ══ SCROLL TRAJECTORY — FULL WIDTH ══ -->
+<div class="traj-wrap" id="trajWrap">
+  <div class="traj-label-bar">↓ SCROLL TO FLY ORION FROM EARTH TO THE MOON AND BACK</div>
+  <div class="traj-sticky-zone">
+    <canvas id="tc"></canvas>
+    <div class="traj-side" id="trajSide">
+      <div class="ts-stage" id="tsStage">STAGE 07</div>
+      <div class="ts-title" id="tsTitle">OUTBOUND COAST</div>
+      <div class="ts-desc" id="tsDesc">Coasting through 240,000 miles of deep space toward the Moon.</div>
+      <div class="ts-stats">
+        <div class="ts-stat"><div class="ts-sv" id="tsV1">4 days</div><div class="ts-sl" id="tsL1">Duration</div></div>
+        <div class="ts-stat"><div class="ts-sv" id="tsV2">240K mi</div><div class="ts-sl" id="tsL2">Distance</div></div>
       </div>
     </div>
-    <div class="traj-stages-spacer"></div>
-    <div class="traj-scroll-hint">↓ SCROLL TO CONTINUE</div>
+    <div class="traj-bottom">
+      <span style="color:var(--green)">● LIVE: <span id="trajLive">---</span> from Earth</span>
+      <span id="trajScroll" style="color:var(--orange)">Scroll: 0%</span>
+    </div>
   </div>
+  <div class="traj-spacer"></div>
+  <div class="traj-hint">↓ SCROLL TO CONTINUE</div>
+</div>
 
-  <!-- SIGNAL + DSN -->
+<div class="page"><!-- resume .page -->
+
+  <!-- ══ SIGNAL + DSN ══ -->
   <div class="sec">Signal Delay &amp; Deep Space Network</div>
   <div class="two-col">
     <div class="card">
-      <div class="card-title">📡 One-Way Signal Delay · Speed of Light</div>
-      <div class="sig-val"><span id="sigVal">---</span>s</div>
-      <div class="sig-desc">Radio signals travel at 299,792 km/s — when mission control speaks, Orion hears it <strong id="sigSec" style="color:var(--blue)">---</strong> seconds later</div>
+      <div class="card-title">📡 ONE-WAY SIGNAL DELAY</div>
+      <div class="sig-num"><span id="sigNum">---</span>s</div>
+      <div class="sig-desc">
+        Radio signals travel at 299,792 km/s — Orion hears mission control
+        <strong id="sigStrong" style="color:var(--blue)">---</strong> seconds after they speak
+      </div>
       <div class="sig-bars">
-        <div class="sb"><span class="sb-l">Orion↔Earth</span><div class="sb-t"><div class="sb-f" id="sigBar" style="width:0%;background:var(--blue)"></div></div><span class="sb-v" id="sigBarV">0s</span></div>
-        <div class="sb"><span class="sb-l">ISS↔Earth</span><div class="sb-t"><div class="sb-f" style="width:0.4%;background:var(--gold)"></div></div><span class="sb-v" style="color:var(--gold)">0.003s</span></div>
-        <div class="sb"><span class="sb-l">Mars↔Earth</span><div class="sb-t"><div class="sb-f" style="width:100%;background:var(--red);opacity:0.5"></div></div><span class="sb-v" style="color:var(--red)">~20min</span></div>
+        <div class="sb">
+          <span class="sb-l">Orion ↔ Earth</span>
+          <div class="sb-t"><div class="sb-f" id="sigBar" style="width:0%;background:var(--blue)"></div></div>
+          <span class="sb-v" id="sigBarV" style="color:var(--blue)">0s</span>
+        </div>
+        <div class="sb">
+          <span class="sb-l">ISS ↔ Earth</span>
+          <div class="sb-t"><div class="sb-f" style="width:0.3%;background:var(--gold)"></div></div>
+          <span class="sb-v" style="color:var(--gold)">0.003s</span>
+        </div>
+        <div class="sb">
+          <span class="sb-l">Mars ↔ Earth</span>
+          <div class="sb-t"><div class="sb-f" style="width:100%;background:var(--red);opacity:0.5"></div></div>
+          <span class="sb-v" style="color:var(--red)">~20 min</span>
+        </div>
       </div>
     </div>
     <div class="card">
-      <div class="card-title" style="display:flex;justify-content:space-between">
-        <span>🛰️ NASA DSN Ground Stations</span>
-        <span id="dsnStatus" style="color:var(--green);font-size:8px">● LIVE</span>
+      <div class="card-title">
+        🛰️ NASA DSN GROUND STATIONS
+        <span id="dsnLive" style="color:var(--green);font-size:8px">● LIVE</span>
       </div>
-      <div class="dsn-stations">
-        <div class="dst" id="dsn0"><div class="dst-icon">📡</div><div class="dst-info"><div class="dst-name">GOLDSTONE</div><div class="dst-loc">California, USA · DSS-43</div></div><div class="dst-sig" id="dsn0s" style="color:var(--dim)">STANDBY</div></div>
-        <div class="dst" id="dsn1"><div class="dst-icon">📡</div><div class="dst-info"><div class="dst-name">MADRID</div><div class="dst-loc">Spain, Europe · DSS-63</div></div><div class="dst-sig" id="dsn1s" style="color:var(--dim)">STANDBY</div></div>
-        <div class="dst" id="dsn2"><div class="dst-icon">📡</div><div class="dst-info"><div class="dst-name">CANBERRA</div><div class="dst-loc">Australia · DSS-26</div></div><div class="dst-sig" id="dsn2s" style="color:var(--dim)">STANDBY</div></div>
+      <div class="dsn-list">
+        <div class="dsn-item" id="dsn0">
+          <div class="dsn-icon">📡</div>
+          <div class="dsn-info">
+            <div class="dsn-name">GOLDSTONE</div>
+            <div class="dsn-loc">California, USA · DSS-43</div>
+          </div>
+          <div class="dsn-sig" id="dsn0s" style="color:var(--dim)">STANDBY</div>
+        </div>
+        <div class="dsn-item" id="dsn1">
+          <div class="dsn-icon">📡</div>
+          <div class="dsn-info">
+            <div class="dsn-name">MADRID</div>
+            <div class="dsn-loc">Spain, Europe · DSS-63</div>
+          </div>
+          <div class="dsn-sig" id="dsn1s" style="color:var(--dim)">STANDBY</div>
+        </div>
+        <div class="dsn-item" id="dsn2">
+          <div class="dsn-icon">📡</div>
+          <div class="dsn-info">
+            <div class="dsn-name">CANBERRA</div>
+            <div class="dsn-loc">Australia · DSS-26</div>
+          </div>
+          <div class="dsn-sig" id="dsn2s" style="color:var(--dim)">STANDBY</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- DISTANCE RECORD -->
-  <div class="record-card">
-    <div class="rec-row">
-      <div class="rec-icon">🏆</div>
-      <div class="rec-info">
-        <div class="rec-label">Apollo 13 Record (1970) — 248,655 km</div>
-        <div class="rec-val">Artemis II will travel 252,021 km — breaking a 54-year record</div>
-        <div class="rec-desc">Victor Glover will be the first person of color beyond LEO. Christina Koch — first woman. Jeremy Hansen — first non-American in deep space.</div>
-        <div class="rec-badge" id="recBadge">⏳ RECORD BREAK INCOMING</div>
+  <!-- ══ RECORD ══ -->
+  <div class="record">
+    <div class="record-row">
+      <div class="record-icon">🏆</div>
+      <div class="record-info">
+        <div class="record-sub">Apollo 13 Record (1970) — 248,655 km</div>
+        <div class="record-main">Artemis II targets 252,021 km — a 54-year record</div>
+        <div class="record-desc">
+          Victor Glover — first person of color beyond LEO.
+          Christina Koch — first woman. Jeremy Hansen — first non-American in deep space.
+        </div>
+        <div class="record-badge" id="recBadge">⏳ RECORD BREAK INCOMING</div>
       </div>
-      <div style="text-align:center;flex-shrink:0">
-        <div style="font-family:var(--display);font-size:28px;font-weight:900;color:var(--gold)" id="recDist">---</div>
-        <div style="font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:2px">km current</div>
+      <div>
+        <div class="record-num" id="recDist">---</div>
+        <div class="record-num-l">km current</div>
       </div>
     </div>
   </div>
 
-  <!-- MISSION STAGES -->
-  <div class="sec">Mission Stages — Stage by Stage</div>
-  <div class="stages-grid" id="stagesGrid"></div>
+  <!-- ══ MISSION STAGES ══ -->
+  <div class="sec">Mission Stages</div>
+  <div class="stages" id="stagesEl"></div>
 
-  <!-- CREW -->
+  <!-- ══ CREW ══ -->
   <div class="sec">The Crew — Four Pioneers</div>
   <div class="crew4">
-    <div class="cc"><div class="cc-em">👨‍🚀</div><div class="cc-name">WISEMAN</div><div class="cc-role">Commander</div><div class="cc-ag">NASA 🇺🇸</div><div class="cc-record">Mission Commander</div></div>
-    <div class="cc"><div class="cc-em">👨‍🚀</div><div class="cc-name">GLOVER</div><div class="cc-role">Pilot</div><div class="cc-ag">NASA 🇺🇸</div><div class="cc-record">First person of color beyond LEO</div></div>
-    <div class="cc"><div class="cc-em">👩‍🚀</div><div class="cc-name">KOCH</div><div class="cc-role">Mission Specialist</div><div class="cc-ag">NASA 🇺🇸</div><div class="cc-record">First woman beyond LEO</div></div>
-    <div class="cc" style="border-color:rgba(255,214,10,0.3)"><div class="cc-em">👨‍🚀</div><div class="cc-name" style="color:var(--gold)">HANSEN</div><div class="cc-role">Mission Specialist</div><div class="cc-ag" style="color:var(--gold);border-color:rgba(255,214,10,0.3)">CSA 🇨🇦</div><div class="cc-record">First non-US citizen in deep space</div></div>
+    <div class="cc">
+      <div class="cc-em">👨‍🚀</div><div class="cc-name">WISEMAN</div>
+      <div class="cc-role">Commander</div><div class="cc-badge">NASA 🇺🇸</div>
+      <div class="cc-record">Mission Commander</div>
+    </div>
+    <div class="cc">
+      <div class="cc-em">👨‍🚀</div><div class="cc-name">GLOVER</div>
+      <div class="cc-role">Pilot</div><div class="cc-badge">NASA 🇺🇸</div>
+      <div class="cc-record">First person of color beyond LEO</div>
+    </div>
+    <div class="cc">
+      <div class="cc-em">👩‍🚀</div><div class="cc-name">KOCH</div>
+      <div class="cc-role">Mission Specialist</div><div class="cc-badge">NASA 🇺🇸</div>
+      <div class="cc-record">First woman beyond LEO</div>
+    </div>
+    <div class="cc star">
+      <div class="cc-em">👨‍🚀</div><div class="cc-name">HANSEN</div>
+      <div class="cc-role">Mission Specialist</div><div class="cc-badge">CSA 🇨🇦</div>
+      <div class="cc-record">First non-US citizen in deep space</div>
+    </div>
   </div>
 
-  <!-- NASA NEWS -->
+  <!-- ══ NEWS ══ -->
   <div class="sec">Latest Mission News</div>
-  <div class="news-grid" id="newsGrid">
-    <div style="text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--dim)">Loading news...</div>
-  </div>
+  <div class="news" id="newsEl"></div>
 
-  <!-- EMAIL SIGNUP -->
+  <!-- ══ EMAIL SIGNUP ══ -->
   <div class="email-card">
     <div class="email-title">📬 FOLLOW THE MISSION</div>
-    <div class="email-desc">Get notified when Orion reaches the Moon, breaks the distance record, and begins its return to Earth.</div>
-    <form class="email-form" action="https://formspree.io/f/xpwzgkqd" method="POST" onsubmit="handleEmailSubmit(event)">
+    <div class="email-desc">Get notified for the lunar flyby, distance record, and splashdown.</div>
+    <form class="email-form" action="https://formspree.io/f/xpwzgkqd" method="POST" onsubmit="handleSub(event)">
       <input class="email-input" type="email" name="email" placeholder="your@email.com" required>
       <button class="email-btn" type="submit">SUBSCRIBE</button>
     </form>
-    <div class="email-note">No spam. Mission-critical updates only. Unsubscribe anytime.</div>
+    <div class="email-note">No spam. Mission updates only. Unsubscribe anytime.</div>
   </div>
 
-  <!-- NASA STREAM -->
+  <!-- ══ NASA STREAM ══ -->
   <div class="sec">NASA Live Coverage</div>
-  <div class="stream-box">
-    <div class="stream-head">🛸 ORION LIVE FEED — NASA OFFICIAL BROADCAST <div class="live-dot" style="margin-left:auto"></div></div>
-    <div class="stream-cta">
-      <a href="https://www.youtube.com/watch?v=m3kR2KK8TEs" target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:#ff0000;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:0.1em">▶ WATCH NASA LIVE ON YOUTUBE</a>
-      <p style="margin-top:10px;font-size:11px;color:var(--dim);font-family:var(--mono)">Opens official NASA broadcast · 24/7 mission coverage</p>
+  <div class="stream">
+    <div class="stream-head">
+      🛸 ORION LIVE FEED — NASA OFFICIAL BROADCAST
+      <div class="live-dot" style="margin-left:auto"></div>
+    </div>
+    <div class="stream-body">
+      <a href="https://www.youtube.com/watch?v=m3kR2KK8TEs" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:10px;background:#ff0000;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:0.1em">
+        ▶ WATCH NASA LIVE ON YOUTUBE
+      </a>
+      <p style="margin-top:10px;font-size:11px;color:var(--dim);font-family:var(--mono)">
+        Official NASA broadcast · 24/7 mission coverage
+      </p>
     </div>
   </div>
 
-  <!-- FACTS -->
+  <!-- ══ FACTS ══ -->
   <div class="sec">Mission Facts</div>
   <div class="facts">
-    <div class="fact"><div class="fi">🚀</div><div class="ft"><strong>Launch</strong>Apr 1, 2026 · 22:35 UTC · KSC LC-39B</div></div>
-    <div class="fact"><div class="fi">📏</div><div class="ft"><strong>Max Distance</strong>252,021 km — breaking Apollo 13's 54-year record</div></div>
-    <div class="fact"><div class="fi">🌕</div><div class="ft"><strong>Lunar Flyby</strong>~4,000 miles above far side — no landing</div></div>
-    <div class="fact"><div class="fi">🏁</div><div class="ft"><strong>Splashdown</strong>~Apr 11 · Pacific Ocean · 40,200 km/h reentry</div></div>
-    <div class="fact"><div class="fi">🛸</div><div class="ft"><strong>Orion "Integrity"</strong>First crewed Orion flight · 4 crew · 10 days</div></div>
-    <div class="fact"><div class="fi">🌡️</div><div class="ft"><strong>Heat Shield</strong>5,000°F on reentry — half the Sun's surface temp</div></div>
-    <div class="fact"><div class="fi">⚡</div><div class="ft"><strong>SLS Power</strong>8.8M lbs thrust · Most powerful NASA rocket ever</div></div>
-    <div class="fact"><div class="fi">🛡️</div><div class="ft"><strong>Skip Reentry</strong>Orion bounces off atmosphere once to reduce G-forces</div></div>
+    <div class="fact"><div class="fact-i">🚀</div><div class="fact-t"><strong>Launch</strong>Apr 1, 2026 · 22:35 UTC · KSC LC-39B · SLS rocket</div></div>
+    <div class="fact"><div class="fact-i">📏</div><div class="fact-t"><strong>Max Distance</strong>252,021 km — breaking Apollo 13's 54-year record</div></div>
+    <div class="fact"><div class="fact-i">🌕</div><div class="fact-t"><strong>Lunar Flyby</strong>~4,000 miles above far side · No landing · Free-return</div></div>
+    <div class="fact"><div class="fact-i">🏁</div><div class="fact-t"><strong>Splashdown</strong>~Apr 11 · Pacific Ocean · 40,200 km/h reentry</div></div>
+    <div class="fact"><div class="fact-i">🛸</div><div class="fact-t"><strong>Orion "Integrity"</strong>First crewed Orion flight · 4 crew · 10 days</div></div>
+    <div class="fact"><div class="fact-i">🌡️</div><div class="fact-t"><strong>Heat Shield</strong>5,000°F on reentry — half as hot as the Sun's surface</div></div>
+    <div class="fact"><div class="fact-i">⚡</div><div class="fact-t"><strong>SLS Power</strong>8.8 million lbs of thrust — most powerful NASA rocket ever</div></div>
+    <div class="fact"><div class="fact-i">🛡️</div><div class="fact-t"><strong>Skip Reentry</strong>Orion bounces off atmosphere once to reduce G-forces to 4G</div></div>
   </div>
 
-  <!-- UPCOMING -->
+  <!-- ══ UPCOMING ══ -->
   <div class="sec">Upcoming Artemis Missions</div>
   <div class="upcoming">
-    <div class="uc"><div class="uc-name">ARTEMIS III</div><div class="uc-desc">First lunar landing since Apollo — first woman on the Moon</div><div class="uc-date">TBD · 2028</div></div>
-    <div class="uc"><div class="uc-name">ARTEMIS IV</div><div class="uc-desc">First crew to Lunar Gateway space station</div><div class="uc-date">TBD · 2029</div></div>
-    <div class="uc"><div class="uc-name">ARTEMIS V</div><div class="uc-desc">Sustained lunar presence begins</div><div class="uc-date">TBD · 2030+</div></div>
+    <div class="uc">
+      <div class="uc-name">ARTEMIS III</div>
+      <div class="uc-desc">First lunar landing since Apollo — first woman on the Moon</div>
+      <div class="uc-date">TBD · 2028</div>
+    </div>
+    <div class="uc">
+      <div class="uc-name">ARTEMIS IV</div>
+      <div class="uc-desc">First crew to Lunar Gateway space station</div>
+      <div class="uc-date">TBD · 2029</div>
+    </div>
+    <div class="uc">
+      <div class="uc-name">ARTEMIS V</div>
+      <div class="uc-desc">Sustained lunar presence begins</div>
+      <div class="uc-date">TBD · 2030+</div>
+    </div>
   </div>
 
-  <!-- FOOTER -->
+  <!-- ══ FOOTER ══ -->
   <footer>
-    <a class="paypal-btn" href="https://paypal.me/AakashAakash443" target="_blank">💙 Support this project via PayPal</a>
+    <a class="paypal-btn" href="https://paypal.me/AakashAakash443" target="_blank" rel="noopener">
+      💙 Support this project via PayPal
+    </a>
     <div class="foot-links">
       <a class="foot-link" href="https://www.nasa.gov/artemis" target="_blank">🛸 NASA Official</a>
       <a class="foot-link" href="fr.html">🇫🇷 Version Française</a>
       <a class="foot-link" href="https://github.com/aaka3h/artemis2live" target="_blank">💻 GitHub</a>
     </div>
-    <p>Tracking humanity's return to the Moon · Data from NASA mission parameters<br>Independent educational project · Not affiliated with NASA · <a href="fr.html" style="color:var(--orange)">🇫🇷 French version →</a></p>
+    <p>
+      Tracking humanity's return to the Moon · Data from NASA mission parameters<br>
+      Independent educational project · Not affiliated with NASA ·
+      <a href="fr.html" style="color:var(--orange)">🇫🇷 French version →</a>
+    </p>
   </footer>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</div><!-- end .page -->
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
 <script>
-// ══ STARS ══
-(function(){const c=document.getElementById('stars'),ctx=c.getContext('2d');let st=[];function resize(){c.width=innerWidth;c.height=innerHeight;st=Array.from({length:300},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.4+0.2,o:Math.random()*0.6+0.1,t:Math.random()*6.28,s:Math.random()*0.012+0.003}));}function draw(){ctx.clearRect(0,0,c.width,c.height);for(const s of st){s.t+=s.s;const o=s.o*(0.6+0.4*Math.sin(s.t));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle=`rgba(255,220,170,${o})`;ctx.fill();}requestAnimationFrame(draw);}resize();draw();window.addEventListener('resize',resize);})();
+'use strict';
 
-// ══ MISSION DATA ══
-const LAUNCH=new Date('2026-04-01T22:35:12Z');
-const TLI   =new Date('2026-04-02T05:00:00Z');
-const FLYBY =new Date('2026-04-07T12:00:00Z');
-const SPLASH=new Date('2026-04-11T18:00:00Z');
-const MOON_KM=384400, C=299792.458;
+/* ── STARS ── */
+(function(){
+  const c=document.getElementById('stars'),ctx=c.getContext('2d');
+  let S=[];
+  function init(){
+    c.width=innerWidth;c.height=innerHeight;
+    S=Array.from({length:280},()=>({
+      x:Math.random()*c.width,y:Math.random()*c.height,
+      r:Math.random()*1.3+0.2,
+      o:Math.random()*0.55+0.1,
+      t:Math.random()*6.28,
+      s:Math.random()*0.01+0.003
+    }));
+  }
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    for(const s of S){
+      s.t+=s.s;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);
+      ctx.fillStyle=`rgba(255,218,160,${s.o*(0.6+0.4*Math.sin(s.t))})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  init();draw();
+  window.addEventListener('resize',init);
+})();
+
+/* ── MISSION CONSTANTS ── */
+const LAUNCH = new Date('2026-04-01T22:35:12Z');
+const TLI    = new Date('2026-04-02T05:00:00Z');
+const FLYBY  = new Date('2026-04-07T12:00:00Z');
+const SPLASH = new Date('2026-04-11T18:00:00Z');
+const MOON   = 384400; // km
+const C      = 299792.458; // km/s
+
 function pad(n){return String(n).padStart(2,'0')}
 function fmt(n){return Math.round(n).toLocaleString('en-US')}
+
 function getDist(now){
-  if(now<TLI)return{d:400,v:7.8};
-  if(now<FLYBY){const t=Math.min((now-TLI)/(FLYBY-TLI),1),sm=t*t*(3-2*t);return{d:Math.round(MOON_KM*sm),v:parseFloat((10.4-(10.4-0.9)*t).toFixed(3))};}
-  if(now<SPLASH){const t=Math.min((now-FLYBY)/(SPLASH-FLYBY),1),sm=t*t*(3-2*t);return{d:Math.round(MOON_KM*(1-sm)),v:parseFloat((0.9+(11-0.9)*t).toFixed(3))};}
+  if(now<TLI) return{d:400,v:7.8};
+  if(now<FLYBY){
+    const t=Math.min((now-TLI)/(FLYBY-TLI),1),sm=t*t*(3-2*t);
+    return{d:Math.round(MOON*sm),v:parseFloat((10.4-(10.4-0.9)*t).toFixed(3))};
+  }
+  if(now<SPLASH){
+    const t=Math.min((now-FLYBY)/(SPLASH-FLYBY),1),sm=t*t*(3-2*t);
+    return{d:Math.round(MOON*(1-sm)),v:parseFloat((0.9+(11-0.9)*t).toFixed(3))};
+  }
   return{d:0,v:0};
 }
+
 function getPhase(now){
-  if(now<TLI)return'EARTH ORBIT · SYSTEMS CHECK';
-  if(now<FLYBY)return'TRANSLUNAR COAST → MOON';
-  if(now<new Date(FLYBY.getTime()+6*3600000))return'LUNAR FLYBY · FAR SIDE';
-  if(now<SPLASH)return'RETURN COAST → EARTH';
-  return'MISSION COMPLETE ✅';
+  if(now<TLI)  return 'EARTH ORBIT · SYSTEMS CHECK';
+  if(now<FLYBY)return 'TRANSLUNAR COAST → MOON';
+  if(now<new Date(FLYBY.getTime()+6*3600000)) return 'LUNAR FLYBY · FAR SIDE';
+  if(now<SPLASH)return 'RETURN COAST → EARTH';
+  return 'MISSION COMPLETE ✅';
 }
-function formatMET(ms){const s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60),sc=s%60;return`${d}d ${pad(h)}:${pad(m)}:${pad(sc)}`;}
 
-// ══ VIEWER COUNT ══
-let viewers = 42 + Math.floor(Math.random()*20);
-function updateViewers(){
-  viewers += Math.floor(Math.random()*5) - 2;
-  viewers = Math.max(15, Math.min(150, viewers));
-  document.getElementById('viewerCount').textContent = viewers;
+function formatMET(ms){
+  const s=Math.floor(ms/1000),d=Math.floor(s/86400);
+  const h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60),sc=s%60;
+  return`${d}d ${pad(h)}:${pad(m)}:${pad(sc)}`;
 }
-setInterval(updateViewers, 8000);
 
-// ══ DSN ══
-function getDSNActive(){const h=new Date().getUTCHours();if(h>=12&&h<20)return 0;if(h>=6&&h<14)return 1;return 2;}
+/* ── DSN ── */
+function getDSN(){
+  const h=new Date().getUTCHours();
+  if(h>=12&&h<20)return 0;
+  if(h>=6&&h<14) return 1;
+  return 2;
+}
 function updateDSN(){
-  const active=getDSNActive();
+  const active=getDSN();
   ['dsn0','dsn1','dsn2'].forEach((id,i)=>{
-    const el=document.getElementById(id),sig=document.getElementById(id+'s');
-    const isActive=i===active;
-    el.classList.toggle('active',isActive);
-    sig.style.color=isActive?'var(--green)':'var(--dim)';
-    sig.textContent=isActive?'📶 TRACKING':'⏸ STANDBY';
-    el.querySelector('.dst-name').style.color=isActive?'var(--green)':'';
+    const el=document.getElementById(id);
+    const sig=document.getElementById(id+'s');
+    const on=i===active;
+    el.classList.toggle('on',on);
+    sig.style.color=on?'var(--green)':'var(--dim2)';
+    sig.textContent=on?'📶 TRACKING':'⏸ STANDBY';
+    el.querySelector('.dsn-name').style.color=on?'var(--green)':'';
   });
 }
 updateDSN();setInterval(updateDSN,30000);
 
-// ══ NEWS FEED ══
+/* ── NEWS ── */
 const NEWS=[
-  {src:'NASA',title:"Artemis II Mission Leaves Earth Orbit for Flight Around Moon",age:"11h ago",url:"https://www.nasa.gov/news-release/nasas-artemis-ii-mission-leaves-earth-orbit-for-flight-around-moon/"},
-  {src:'Space.com',title:"Artemis 2 astronauts complete critical TLI burn — now bound for the Moon",age:"14h ago",url:"https://www.space.com/artemis"},
-  {src:'CNN',title:"Four astronauts are heading to the Moon for the first time in 53 years",age:"1d ago",url:"https://www.cnn.com/2026/04/01/science/live-news/artemis-2-nasa-launch"},
-  {src:'CSA',title:"Jeremy Hansen becomes first Canadian to reach deep space",age:"1d ago",url:"https://www.asc-csa.gc.ca/"},
-  {src:'NASA',title:"Artemis II crew completes proximity operations demo",age:"2d ago",url:"https://www.nasa.gov/artemis"},
-  {src:'Scientific American',title:"Artemis II officially on track for lunar flyby on April 7",age:"9h ago",url:"https://www.scientificamerican.com/article/nasas-artemis-ii-mission-is-officially-on-track-for-the-moon/"},
+  {s:'NASA',t:'Artemis II Mission Leaves Earth Orbit for Flight Around Moon',a:'11h ago',u:'https://www.nasa.gov/artemis'},
+  {s:'Space.com',t:'Artemis 2 astronauts complete TLI burn — now bound for the Moon',a:'14h ago',u:'https://www.space.com/artemis'},
+  {s:'CNN',t:'Four astronauts heading to the Moon for the first time in 53 years',a:'1d ago',u:'https://www.cnn.com/2026/04/01/science/live-news/artemis-2-nasa-launch'},
+  {s:'CSA',t:'Jeremy Hansen becomes first Canadian to reach deep space',a:'1d ago',u:'https://www.asc-csa.gc.ca/'},
+  {s:'NASA',t:'Artemis II crew completes proximity operations demonstration',a:'2d ago',u:'https://www.nasa.gov/artemis'},
+  {s:'Scientific American',t:'Artemis II officially on track for lunar flyby on April 7',a:'9h ago',u:'https://www.scientificamerican.com/article/nasas-artemis-ii-mission-is-officially-on-track-for-the-moon/'},
 ];
-function buildNews(){
-  const g=document.getElementById('newsGrid');
-  g.innerHTML=NEWS.map(n=>`<a class="news-item" href="${n.url}" target="_blank" rel="noopener">
-    <span class="news-src">${n.src}</span>
-    <div class="news-body"><div class="news-title">${n.title}</div><div class="news-age">${n.age}</div></div>
+document.getElementById('newsEl').innerHTML=NEWS.map(n=>`
+  <a class="news-item" href="${n.u}" target="_blank" rel="noopener">
+    <span class="news-src">${n.s}</span>
+    <div class="news-body">
+      <div class="news-title">${n.t}</div>
+      <div class="news-age">${n.a}</div>
+    </div>
   </a>`).join('');
-}
-buildNews();
 
-// ══ MISSION STAGES ══
+/* ── MISSION STAGES ── */
 const STAGES=[
-  {num:'00',title:'ON THE PAD',time:'T-0:00:00',date:'Apr 1 · Pre-launch',status:'done',
-   desc:'The Space Launch System stands 322 feet tall on Launch Complex 39B. Fully fueled with 733,000 gallons of liquid hydrogen and oxygen. The same pad launched Apollo missions to the Moon.',
+  {n:'00',t:'ON THE PAD',time:'T-0:00:00',date:'Apr 1',st:'done',
+   desc:'SLS stands 322 feet tall on Launch Complex 39B — the same pad that launched Apollo. Fully fueled with 733,000 gallons of liquid hydrogen and oxygen, generating 8.8 million pounds of thrust.',
    stats:[{v:'322 ft',l:'Height'},{v:'8.8M lbs',l:'Thrust'},{v:'733K gal',l:'Fuel'},{v:'5.75M lbs',l:'Weight'}],
-   facts:['Most powerful rocket ever built by NASA','Two 5-segment solid rocket boosters provide 75% of liftoff thrust','Four RS-25 engines — upgraded Space Shuttle main engines','Orion spacecraft sits atop with Launch Abort System']},
-  {num:'01',title:'IGNITION & LIFTOFF',time:'T+0:00:00',date:'Apr 1 · 22:35 UTC',status:'done',
-   desc:'At T-6.4 seconds the RS-25 engines ignite. At T-0, twin solid rocket boosters fire and eight explosive bolts release the rocket. In 8.5 seconds, SLS clears the 380-foot mobile launcher tower.',
-   stats:[{v:'0→100 mph',l:'Speed'},{v:'1,500 gal/s',l:'Fuel Rate'},{v:'180 dB',l:'Noise'},{v:'8',l:'Bolts Released'}],
-   facts:['RS-25 engines throttle to 109% of rated power at liftoff','Sound Suppression System dumps 450,000 gallons of water','Peak noise reaches 180 dB — louder than a jet engine','8.5 seconds to clear the 380-foot launch tower']},
-  {num:'02',title:'MAX-Q',time:'T+1:20',date:'Apr 1 · ~22:36 UTC',status:'done',
-   desc:'About 80 seconds after launch, maximum aerodynamic stress. The atmosphere pushes hardest as the rocket accelerates through the sound barrier. RS-25 engines briefly throttle down to reduce stress.',
-   stats:[{v:'35,000 ft',l:'Altitude'},{v:'Mach 1+',l:'Speed'},{v:'2.5 Gs',l:'G-Force'},{v:'700 psf',l:'Peak Pressure'}],
-   facts:['Max-Q occurs at roughly 35,000 feet altitude','Rocket passes the sound barrier at about 1 minute','Engine throttle-down protects structure from excessive loads','Crew feels approximately 2.5 Gs of force']},
-  {num:'03',title:'BOOSTER SEPARATION',time:'T+2:12',date:'Apr 1 · ~22:37 UTC',status:'done',
-   desc:'Twin solid rocket boosters burned through 1.2 million pounds of propellant each. Explosive separation motors push the 187-foot boosters away at 20 feet per second.',
-   stats:[{v:'150K ft',l:'Altitude'},{v:'3,000 mph',l:'Speed'},{v:'2.4M lbs',l:'Fuel Burned'},{v:'T+2:12',l:'Time'}],
-   facts:['Each SRB weighs 1.6 million pounds at ignition','Separation at approximately 150,000 feet — 28 miles up','Unlike Space Shuttle SRBs, these are not recovered']},
-  {num:'04',title:'CORE STAGE SEPARATION',time:'T+8:15',date:'Apr 1 · ~22:43 UTC',status:'done',
-   desc:'After 8 minutes burning, RS-25 engines shut down — Main Engine Cutoff (MECO). The massive 212-foot core stage separates and falls back to Earth over the Pacific.',
-   stats:[{v:'17K mph',l:'Speed'},{v:'100 mi',l:'Altitude'},{v:'2.2M lbs',l:'Core Fuel Used'},{v:'8:15',l:'Burn Time'}],
-   facts:['Core stage is the largest single rocket stage ever built','ICPS powered by a single RL-10 engine — proven on 500+ flights','Core stage breaks up in atmosphere over the Pacific']},
-  {num:'05',title:'EARTH ORBIT & CHECKOUT',time:'T+15min',date:'Apr 1–2',status:'done',
-   desc:'Orion enters high Earth orbit for up to 24 hours of systems checkout. First time humans have flown in Orion — every system must be verified before committing to the Moon.',
+   facts:['Most powerful rocket ever built by NASA','Two 5-segment solid rocket boosters provide 75% of liftoff thrust','Four RS-25 engines — upgraded Space Shuttle main engines']},
+  {n:'01',t:'IGNITION & LIFTOFF',time:'T+0',date:'Apr 1 · 22:35 UTC',st:'done',
+   desc:'At T-6.4 seconds RS-25 engines ignite. At T-0, twin solid rocket boosters fire and eight explosive bolts release the rocket. In 8.5 seconds SLS clears the 380-foot mobile launcher.',
+   stats:[{v:'0→100 mph',l:'Speed'},{v:'1,500 gal/s',l:'Fuel Rate'},{v:'180 dB',l:'Noise'},{v:'8',l:'Bolts'}],
+   facts:['RS-25 engines throttle to 109% of rated power','Sound Suppression System dumps 450,000 gallons of water','Peak noise reaches 180 dB — louder than a jet engine']},
+  {n:'02',t:'MAX-Q',time:'T+1:20',date:'Apr 1',st:'done',
+   desc:'About 80 seconds after launch — maximum aerodynamic stress. The atmosphere pushes hardest as the rocket breaks the sound barrier. Engines throttle down briefly to reduce structural stress.',
+   stats:[{v:'35K ft',l:'Altitude'},{v:'Mach 1+',l:'Speed'},{v:'2.5 Gs',l:'G-Force'},{v:'700 psf',l:'Pressure'}],
+   facts:['Max-Q occurs at roughly 35,000 feet altitude','Engine throttle-down protects structure from excessive loads','Crew feels approximately 2.5 Gs of force']},
+  {n:'03',t:'BOOSTER SEPARATION',time:'T+2:12',date:'Apr 1',st:'done',
+   desc:'Twin solid rocket boosters burned through 1.2 million pounds of propellant each. Explosive separation motors push the 187-foot boosters away at 20 feet per second from 150,000 feet.',
+   stats:[{v:'150K ft',l:'Altitude'},{v:'3,000 mph',l:'Speed'},{v:'2.4M lbs',l:'Fuel Used'},{v:'T+2:12',l:'Time'}],
+   facts:['Each SRB weighs 1.6 million pounds at ignition','Unlike Space Shuttle SRBs, these are not recovered']},
+  {n:'04',t:'CORE STAGE SEPARATION',time:'T+8:15',date:'Apr 1',st:'done',
+   desc:'After 8 minutes burning, RS-25 engines shut down — Main Engine Cutoff (MECO). The 212-foot core stage separates and falls to Earth. ICPS and Orion continue upward.',
+   stats:[{v:'17K mph',l:'Speed'},{v:'100 mi',l:'Altitude'},{v:'2.2M lbs',l:'Fuel Used'},{v:'8:15',l:'Burn Time'}],
+   facts:['Core stage is the largest single rocket stage ever built','ICPS powered by a single RL-10 engine — proven on 500+ flights']},
+  {n:'05',t:'EARTH ORBIT & CHECKOUT',time:'T+15min',date:'Apr 1–2',st:'done',
+   desc:'Orion enters high Earth orbit for up to 24 hours of systems checkout. First time humans have flown in Orion — every system verified before committing to the Moon.',
    stats:[{v:'115–43K mi',l:'Orbit'},{v:'17,500 mph',l:'Speed'},{v:'~24 hrs',l:'Duration'},{v:'~1',l:'Orbit'}],
    facts:['Orbit reaches up to 43,000 miles from Earth at apogee','Crew performs proximity operations and manual piloting tests','All Orion systems verified: life support, thermal, power, navigation']},
-  {num:'06',title:'TRANS-LUNAR INJECTION',time:'T+24hrs',date:'Apr 2 · ~05:00 UTC',status:'done',
-   desc:'This is the moment. Orion\'s European Service Module engine fires for ~5 minutes 45 seconds, accelerating from 17,500 mph to 24,500 mph. This single burn commits the crew to the Moon.',
-   stats:[{v:'+7,000 mph',l:'Delta-V'},{v:'~5:45',l:'Burn Time'},{v:'24,500 mph',l:'Final Speed'},{v:'OMS-E',l:'Engine'}],
-   facts:['TLI burn increases speed by approximately 7,000 mph','Free-return trajectory: gravity alone returns crew to Earth if needed','Same maneuver Apollo missions used — but with modern precision']},
-  {num:'07',title:'OUTBOUND COAST',time:'Day 2–5',date:'Apr 2–7',status:'current',
-   desc:'Four days coasting through the void between Earth and Moon. The crew experiences something only 24 humans have ever seen: Earth shrinking to the size of a marble.',
-   stats:[{v:'240K mi',l:'Distance'},{v:'4 days',l:'Duration'},{v:'3K–24K mph',l:'Speed Range'},{v:'1.3 sec',l:'Comm Delay'}],
-   facts:['Crew will see Earth as a complete sphere — the "Overview Effect"','Radiation exposure increases outside Earth\'s magnetosphere','Mid-course correction burns performed using Service Module engine','Communication delay grows to 1.3 seconds each way']},
-  {num:'08',title:'LUNAR FLYBY',time:'Day 5–6',date:'~Apr 7',status:'future',
-   desc:'Orion swings behind the Moon at approximately 4,000 miles above the far side. Farthest humans have ever traveled from Earth — breaking Apollo 13\'s 54-year record.',
-   stats:[{v:'~4,000 mi',l:'Closest'},{v:'~5 hrs',l:'Geology Obs.'},{v:'5,000 mph',l:'Speed'},{v:'252K mi',l:'Max Distance'}],
-   facts:['Closest approach ~4,000 miles above the lunar surface','Crew photographs potential Artemis III landing sites','Moon\'s gravity bends Orion\'s trajectory homeward — no burn required','252,021 km from Earth — a new record for human spaceflight']},
-  {num:'09',title:'RETURN TRANSIT',time:'Day 6–9',date:'Apr 7–11',status:'future',
-   desc:'After the lunar flyby, Earth\'s gravity steadily accelerates Orion homeward. Speed increases from 3,000 mph to over 25,000 mph.',
-   stats:[{v:'4 days',l:'Duration'},{v:'3K→25K mph',l:'Acceleration'},{v:'240K mi',l:'Distance'},{v:'25,000 mph',l:'Final Speed'}],
-   facts:['Free-return trajectory requires no major engine burns to come home','Earth\'s gravity accelerates the spacecraft continuously','Service Module is jettisoned shortly before re-entry']},
-  {num:'10',title:'REENTRY',time:'Day 10',date:'~Apr 11',status:'future',
-   desc:'Service Module jettisoned, exposing the heat shield — 16.5 feet in diameter. Capsule hits atmosphere at Mach 32, creating plasma at 5,000°F. Uses "skip re-entry" — bouncing off atmosphere once.',
-   stats:[{v:'24,500 mph',l:'Entry Speed'},{v:'5,000°F',l:'Temperature'},{v:'4 Gs',l:'G-Force'},{v:'16.5 ft',l:'Shield Size'}],
-   facts:['Heat shield reaches 5,000°F — half as hot as the Sun\'s surface','Skip reentry bounces off atmosphere to reduce G-forces','Plasma blackout cuts all communication for ~5 minutes','One shot — no option to wait for better conditions']},
-  {num:'11',title:'SPLASHDOWN',time:'Day 10',date:'~Apr 11 · Pacific Ocean',status:'future',
-   desc:'Three drogue parachutes deploy at 25,000 feet. Then three massive main parachutes — each 116 feet wide — open at 9,000 feet. Orion splashes down in the Pacific off San Diego.',
-   stats:[{v:'116 ft each',l:'Chute Size'},{v:'20 mph',l:'Impact Speed'},{v:'1.2M+ mi',l:'Total Distance'},{v:'~10 days',l:'Duration'}],
-   facts:['11 parachutes total — 3 drogue, 3 pilot, 3 main, 2 forward bay cover','Each main parachute large enough to cover a football field','USS Portland recovery ship waiting in the Pacific','Total mission distance: over 1.2 million miles']},
+  {n:'06',t:'TRANS-LUNAR INJECTION',time:'T+24hrs',date:'Apr 2 · ~05:00 UTC',st:'done',
+   desc:'This is the moment. Orion\'s European Service Module engine fires for 5 minutes 45 seconds, accelerating from 17,500 mph to 24,500 mph — escape velocity. This single burn commits the crew to the Moon.',
+   stats:[{v:'+7,000 mph',l:'Delta-V'},{v:'5:45',l:'Burn Time'},{v:'24,500 mph',l:'Final Speed'},{v:'OMS-E',l:'Engine'}],
+   facts:['TLI burn increases speed by approximately 7,000 mph','Free-return trajectory: gravity alone returns crew to Earth if needed','Same maneuver Apollo missions used — with modern precision']},
+  {n:'07',t:'OUTBOUND COAST',time:'Day 2–5',date:'Apr 2–7',st:'current',
+   desc:'Four days coasting through the void between Earth and Moon. The crew experiences something only 24 humans have seen: Earth shrinking to the size of a marble while the Moon grows into a world.',
+   stats:[{v:'240K mi',l:'Distance'},{v:'4 days',l:'Duration'},{v:'3K–24K mph',l:'Speed'},{v:'1.3 sec',l:'Comm Delay'}],
+   facts:['Crew will see Earth as a complete sphere — the "Overview Effect"','Radiation exposure increases outside Earth\'s magnetosphere','Communication delay grows to 1.3 seconds each way']},
+  {n:'08',t:'LUNAR FLYBY',time:'Day 5–6',date:'~Apr 7',st:'future',
+   desc:'Orion swings behind the Moon at approximately 4,000 miles above the far side — closer than any human since 1972. The crew photographs the far side and breaks the Apollo 13 distance record.',
+   stats:[{v:'~4,000 mi',l:'Closest'},{v:'~5 hrs',l:'Obs. Time'},{v:'252K mi',l:'Max Dist.'},{v:'5,000 mph',l:'Speed'}],
+   facts:['Closest approach ~4,000 miles above the lunar surface','Crew photographs potential Artemis III landing sites','Moon\'s gravity bends Orion\'s trajectory homeward — no burn required']},
+  {n:'09',t:'RETURN TRANSIT',time:'Day 6–9',date:'Apr 7–11',st:'future',
+   desc:'After the lunar flyby, Earth\'s gravity steadily accelerates Orion homeward. Speed increases from 3,000 mph to over 25,000 mph. Earth grows from a blue marble back into a world.',
+   stats:[{v:'4 days',l:'Duration'},{v:'3K→25K mph',l:'Acceleration'},{v:'240K mi',l:'Distance'},{v:'25K mph',l:'Final Speed'}],
+   facts:['Free-return trajectory requires no major engine burns','Service Module is jettisoned shortly before re-entry']},
+  {n:'10',t:'REENTRY',time:'Day 10',date:'~Apr 11',st:'future',
+   desc:'Service Module jettisoned, exposing the heat shield — 16.5 feet in diameter. The capsule hits the atmosphere at Mach 32 — 5,000°F plasma sheath. Uses "skip reentry" to reduce G-forces.',
+   stats:[{v:'24.5K mph',l:'Entry Speed'},{v:'5,000°F',l:'Temperature'},{v:'4 Gs',l:'G-Force'},{v:'16.5 ft',l:'Shield'}],
+   facts:['Heat shield reaches 5,000°F — half as hot as the Sun\'s surface','Skip reentry bounces off atmosphere once to reduce G-forces','Plasma blackout cuts all communication for ~5 minutes']},
+  {n:'11',t:'SPLASHDOWN',time:'Day 10',date:'~Apr 11 · Pacific',st:'future',
+   desc:'Three drogue parachutes deploy at 25,000 feet. Three main parachutes — each 116 feet wide — open at 9,000 feet. Orion splashes down in the Pacific off San Diego at 20 mph.',
+   stats:[{v:'116 ft',l:'Chute Size'},{v:'20 mph',l:'Impact'},{v:'1.2M+ mi',l:'Total Dist.'},{v:'10 days',l:'Duration'}],
+   facts:['11 parachutes total — 3 drogue, 3 pilot, 3 main, 2 forward bay cover','Each main parachute large enough to cover a football field','USS Portland recovery ship waiting in the Pacific']},
 ];
 
-function buildStages(now){
-  const g=document.getElementById('stagesGrid');
-  g.innerHTML=STAGES.map((s,i)=>{
-    const isDone=s.status==='done';
-    const isActive=s.status==='current';
-    const cls=isDone?'done':isActive?'active':'';
-    const badgeCls=isDone?'done':isActive?'active':'future';
-    const badgeTxt=isDone?'✅ COMPLETE':isActive?'⚡ LIVE NOW':'⏳ UPCOMING';
-    return`<div class="stage-card ${cls}" id="sc${i}">
-      <div class="stage-head" onclick="toggleStage(${i})">
-        <span class="stage-num ${cls}">STAGE ${s.num}</span>
-        <span class="stage-title ${cls}">${s.title}</span>
-        <span class="stage-time">${s.time}</span>
-        <span class="stage-badge ${badgeCls}">${badgeTxt}</span>
-      </div>
-      <div class="stage-body ${isActive?'open':''}" id="sb${i}">
-        <div class="stage-desc">${s.desc}</div>
-        <div class="stage-stats">${s.stats.map(st=>`<div class="stage-stat"><div class="stage-stat-v">${st.v}</div><div class="stage-stat-l">${st.l}</div></div>`).join('')}</div>
-        <div class="stage-facts">${s.facts.map(f=>`<div class="stage-fact">${f}</div>`).join('')}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-buildStages(new Date());
+document.getElementById('stagesEl').innerHTML=STAGES.map((s,i)=>{
+  const cls=s.st==='current'?'live':s.st==='done'?'done':'';
+  const bCls=s.st==='current'?'badge-live':s.st==='done'?'badge-done':'badge-future';
+  const bTxt=s.st==='current'?'⚡ LIVE NOW':s.st==='done'?'✅ COMPLETE':'⏳ UPCOMING';
+  return`<div class="stage ${cls}" id="st${i}">
+    <div class="stage-head" onclick="toggleStage(${i})">
+      <span class="stage-num">STAGE ${s.n}</span>
+      <span class="stage-title">${s.t}</span>
+      <span class="stage-time">${s.time}</span>
+      <span class="stage-badge ${bCls}">${bTxt}</span>
+    </div>
+    <div class="stage-body ${s.st==='current'?'open':''}" id="sb${i}">
+      <div class="stage-desc">${s.desc}</div>
+      <div class="stage-stats-grid">${s.stats.map(x=>`<div class="stage-stat"><div class="stage-stat-v">${x.v}</div><div class="stage-stat-l">${x.l}</div></div>`).join('')}</div>
+      <div class="stage-facts">${s.facts.map(f=>`<div class="stage-fact">${f}</div>`).join('')}</div>
+    </div>
+  </div>`;
+}).join('');
 
-window.toggleStage=function(i){
-  const b=document.getElementById('sb'+i);
-  b.classList.toggle('open');
+window.toggleStage=i=>{
+  document.getElementById('sb'+i).classList.toggle('open');
 };
 
-// ══ SCROLL TRAJECTORY v2 ══
+/* ── EMAIL ── */
+window.handleSub=e=>{
+  e.preventDefault();
+  const btn=e.target.querySelector('.email-btn');
+  btn.textContent='✅ SUBSCRIBED!';
+  btn.style.background='var(--green)';btn.style.color='#000';
+  setTimeout(()=>{btn.textContent='SUBSCRIBE';btn.style.background='';btn.style.color='';},3000);
+};
+
+/* ══════════════════════════════════════
+   SCROLL TRAJECTORY — CLEAN REWRITE
+══════════════════════════════════════ */
 (function(){
-  const canvas = document.getElementById('trajCanvas');
-  const outer  = document.getElementById('trajOuter');
-  if(!canvas || !outer) return;
+  const canvas = document.getElementById('tc');
+  if(!canvas) return;
   const ctx = canvas.getContext('2d');
-  let animPct = 0, targetPct = 0;
-  let W = 0, H = 0;
+  const wrap = document.getElementById('trajWrap');
+  const spacer = wrap.querySelector('.traj-spacer');
 
-  // ── Resize canvas only when needed ──
-  function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    W = window.innerWidth;
-    H = Math.min(window.innerHeight - 36, 600);
-    canvas.width  = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    canvas.style.width  = W + 'px';
-    canvas.style.height = H + 'px';
+  let _W=0, _H=0, _dpr=1;
+  let animPct=0, targetPct=0;
+
+  // Resize — called ONCE on load and on resize
+  function resize(){
+    _dpr = window.devicePixelRatio || 1;
+    _W   = window.innerWidth;
+    _H   = Math.min(window.innerHeight - 42, 580);
+    canvas.width  = Math.round(_W * _dpr);
+    canvas.height = Math.round(_H * _dpr);
+    canvas.style.width  = _W + 'px';
+    canvas.style.height = _H + 'px';
   }
-  resizeCanvas();
-  window.addEventListener('resize', () => { resizeCanvas(); draw(animPct); });
+  resize();
+  window.addEventListener('resize', resize);
 
-  // Milestone stages along trajectory
-  const MILESTONES = [
-    {pct:0.00, label:'LAUNCH',            color:'#ff4500', side:'below'},
-    {pct:0.06, label:'BOOSTER SEP',       color:'#ff6a00', side:'below'},
-    {pct:0.13, label:'EARTH ORBIT',       color:'#ff8c00', side:'above'},
-    {pct:0.22, label:'TRANS-LUNAR INJ.',  color:'#ffb700', side:'above'},
-    {pct:0.40, label:'60K MILES OUT',     color:'#ffd60a', side:'above'},
-    {pct:0.50, label:'HALFWAY POINT',     color:'#aaff44', side:'above'},
-    {pct:0.62, label:'LUNAR APPROACH',    color:'#44ffaa', side:'below'},
-    {pct:0.72, label:'FAR SIDE FLYBY',    color:'#00d4ff', side:'below'},
-    {pct:0.82, label:'HOMEWARD BOUND',    color:'#4dabf7', side:'below'},
-    {pct:0.92, label:'RE-ENTRY',          color:'#aa44ff', side:'below'},
-    {pct:0.99, label:'SPLASHDOWN',        color:'#ff4444', side:'above'},
+  // Milestone labels on orbit
+  const ML=[
+    {p:0.00,label:'LAUNCH',         c:'#ff4500',above:false},
+    {p:0.06,label:'BOOSTER SEP',    c:'#ff6600',above:false},
+    {p:0.13,label:'EARTH ORBIT',    c:'#ff8c00',above:true},
+    {p:0.22,label:'TRANS-LUNAR INJ',c:'#ffb700',above:true},
+    {p:0.40,label:'60K MILES OUT',  c:'#ffd60a',above:true},
+    {p:0.50,label:'HALFWAY',        c:'#aaff44',above:true},
+    {p:0.62,label:'LUNAR APPROACH', c:'#44ffaa',above:false},
+    {p:0.72,label:'FAR SIDE FLYBY', c:'#00d4ff',above:false},
+    {p:0.82,label:'HOMEWARD BOUND', c:'#4dabf7',above:false},
+    {p:0.92,label:'RE-ENTRY',       c:'#9955ff',above:false},
+    {p:0.99,label:'SPLASHDOWN',     c:'#ff4444',above:true},
   ];
 
-  // Side panel info per stage
-  const PANEL_INFO = [
-    {stage:'STAGE 01', title:'IGNITION & LIFTOFF', desc:'SLS generates 8.8 million pounds of thrust. Eight explosive bolts release the rocket at T-0. The crew is pressed back with 3 Gs of force.', v1:'8.8M lbs', l1:'Thrust', v2:'0→100mph', l2:'Speed'},
-    {stage:'STAGE 03', title:'BOOSTER SEPARATION', desc:'Twin solid rocket boosters are jettisoned after burning through 1.2M lbs of propellant each. The core stage RS-25 engines continue burning.', v1:'150K ft', l1:'Altitude', v2:'3,000 mph', l2:'Speed'},
-    {stage:'STAGE 05', title:'EARTH ORBIT', desc:'Orion enters high Earth orbit for 24 hours of systems checkout. Every system verified before committing to the Moon.', v1:'115 mi', l1:'Orbit Alt', v2:'17,500 mph', l2:'Speed'},
-    {stage:'STAGE 06', title:'TRANS-LUNAR INJECTION', desc:'The moment it becomes real. Orion\'s engine fires for 5 min 45 sec, accelerating to 24,500 mph — escape velocity to the Moon.', v1:'+7,000 mph', l1:'Delta-V', v2:'24,500 mph', l2:'Final Speed'},
-    {stage:'STAGE 07', title:'OUTBOUND COAST', desc:'4 days crossing 240,000 miles of deep space. Earth shrinks to a marble. The crew is farther from home than anyone since Apollo.', v1:'240K mi', l1:'Distance', v2:'4 days', l2:'Duration'},
-    {stage:'STAGE 07', title:'HALFWAY TO THE MOON', desc:'Equidistant from Earth and Moon — approximately 120,000 miles from each. Gravity from both bodies is balanced. The crew is truly between worlds.', v1:'120K mi', l1:'From Earth', v2:'~1.3 sec', l2:'Comm Delay'},
-    {stage:'STAGE 08', title:'LUNAR APPROACH', desc:'The Moon grows from a dot to a world. The crew prepares for closest approach — ~4,000 miles above the far side, closer than any human since 1972.', v1:'~4,000 mi', l1:'Closest App.', v2:'5,000 mph', l2:'Speed'},
-    {stage:'STAGE 08', title:'FAR SIDE FLYBY', desc:'The crew sees what only 24 humans have seen — the far side of the Moon. No radio contact with Earth during this phase. A 54-year distance record broken.', v1:'252K mi', l1:'Record Dist.', v2:'5 hrs', l2:'Obs. Time'},
-    {stage:'STAGE 09', title:'HOMEWARD BOUND', desc:'Earth\'s gravity accelerates Orion home. Speed builds from 3,000 to 25,000 mph. Earth grows from a blue marble back into a world.', v1:'4 days', l1:'Duration', v2:'25K mph', l2:'Final Speed'},
-    {stage:'STAGE 10', title:'REENTRY', desc:'Service Module jettisoned. Heat shield exposed. Capsule hits atmosphere at Mach 32 — 5,000°F plasma sheath. Skip reentry reduces G-forces.', v1:'5,000°F', l1:'Peak Heat', v2:'4 Gs', l2:'G-Force'},
-    {stage:'STAGE 11', title:'SPLASHDOWN', desc:'Three 116-foot main parachutes slow descent to 20 mph. Orion splashes down in the Pacific off San Diego. 1.2 million miles traveled. Mission complete.', v1:'20 mph', l1:'Impact Speed', v2:'1.2M+ mi', l2:'Total Dist.'},
+  // Gradient colors along path
+  const GCOLORS=['#ff4500','#ff6600','#ff8c00','#ffb700','#ffd60a','#aaff44','#44ffaa','#00d4ff','#4dabf7','#8855ff','#cc44ff'];
+
+  // Side panel data
+  const PANELS=[
+    {stage:'STAGE 01',title:'IGNITION & LIFTOFF',desc:'SLS generates 8.8 million pounds of thrust. Eight explosive bolts release the rocket at T-0.',v1:'8.8M lbs',l1:'Thrust',v2:'0→100mph',l2:'Speed'},
+    {stage:'STAGE 03',title:'BOOSTER SEPARATION',desc:'Twin SRBs jettisoned after burning through 1.2M lbs of propellant each at 150,000 feet.',v1:'150K ft',l1:'Altitude',v2:'3,000 mph',l2:'Speed'},
+    {stage:'STAGE 05',title:'EARTH ORBIT',desc:'Orion enters high Earth orbit for 24 hours of systems checkout before committing to the Moon.',v1:'115 mi',l1:'Orbit Alt',v2:'17,500 mph',l2:'Speed'},
+    {stage:'STAGE 06',title:'TRANS-LUNAR INJECTION',desc:'Engine fires for 5:45 — accelerating to 24,500 mph. The crew is committed to the Moon.',v1:'+7K mph',l1:'Delta-V',v2:'24,500 mph',l2:'Final Speed'},
+    {stage:'STAGE 07',title:'OUTBOUND COAST',desc:'4 days crossing 240,000 miles of deep space. Earth shrinks to a marble. Farthest from home since Apollo.',v1:'240K mi',l1:'Distance',v2:'4 days',l2:'Duration'},
+    {stage:'STAGE 07',title:'HALFWAY POINT',desc:'Equidistant from Earth and Moon — 120,000 miles from each. Gravity from both worlds balanced.',v1:'120K mi',l1:'From Earth',v2:'1.3 sec',l2:'Comm Delay'},
+    {stage:'STAGE 08',title:'LUNAR APPROACH',desc:'The Moon grows from a dot to a world. Closest approach — ~4,000 miles above the far side.',v1:'~4K mi',l1:'Closest',v2:'5,000 mph',l2:'Speed'},
+    {stage:'STAGE 08',title:'FAR SIDE FLYBY',desc:'The crew sees the far side of the Moon — breaking the Apollo 13 distance record. No radio contact.',v1:'252K mi',l1:'Record',v2:'5 hrs',l2:'Obs. Time'},
+    {stage:'STAGE 09',title:'HOMEWARD BOUND',desc:'Earth\'s gravity pulls Orion home. Speed builds from 3,000 to 25,000 mph. Earth grows large again.',v1:'4 days',l1:'Duration',v2:'25K mph',l2:'Final Speed'},
+    {stage:'STAGE 10',title:'REENTRY',desc:'5,000°F plasma sheath. Mach 32. Skip reentry reduces G-forces to 4G. One shot — no second chance.',v1:'5,000°F',l1:'Peak Heat',v2:'4 Gs',l2:'G-Force'},
+    {stage:'STAGE 11',title:'SPLASHDOWN',desc:'116-foot parachutes slow descent to 20 mph. 1.2 million miles traveled. Mission complete.',v1:'20 mph',l1:'Impact',v2:'1.2M+ mi',l2:'Total Dist.'},
   ];
 
-  function getPanelForPct(pct) {
-    let idx = 0;
-    for(let i = 0; i < MILESTONES.length; i++) {
-      if(pct >= MILESTONES[i].pct) idx = i;
-    }
-    return PANEL_INFO[Math.min(idx, PANEL_INFO.length-1)];
+  function getPanel(pct){
+    let i=0;
+    for(let j=0;j<ML.length;j++){if(pct>=ML[j].p)i=j;}
+    return PANELS[Math.min(i,PANELS.length-1)];
   }
 
-  function getPathPoint(pct, W, H) {
-    // Earth center-left, Moon center-right
-    const eX = W * 0.18, eY = H * 0.52;
-    const mX = W * 0.82, mY = H * 0.52;
-    // Control points for upper (outbound) and lower (return) arcs
-    const cp1X = W*0.35, cp1Y = H*0.08;
-    const cp2X = W*0.65, cp2Y = H*0.08;
-    const cp3X = W*0.65, cp3Y = H*0.92;
-    const cp4X = W*0.35, cp4Y = H*0.92;
-
-    let x, y;
-    if(pct <= 0.5) {
-      const t = pct * 2, mt = 1-t;
-      x = mt*mt*mt*eX + 3*mt*mt*t*cp1X + 3*mt*t*t*cp2X + t*t*t*mX;
-      y = mt*mt*mt*eY + 3*mt*mt*t*cp1Y + 3*mt*t*t*cp2Y + t*t*t*mY;
-    } else {
-      const t = (pct-0.5)*2, mt = 1-t;
-      x = mt*mt*mt*mX + 3*mt*mt*t*cp3X + 3*mt*t*t*cp4X + t*t*t*eX;
-      y = mt*mt*mt*mY + 3*mt*mt*t*cp3Y + 3*mt*t*t*cp4Y + t*t*t*eY;
+  // Bezier point on free-return path
+  function pt(pct){
+    const eX=_W*0.17, eY=_H*0.52;
+    const mX=_W*0.83, mY=_H*0.52;
+    const c1x=_W*0.35,c1y=_H*0.07;
+    const c2x=_W*0.65,c2y=_H*0.07;
+    const c3x=_W*0.65,c3y=_H*0.93;
+    const c4x=_W*0.35,c4y=_H*0.93;
+    if(pct<=0.5){
+      const t=pct*2,m=1-t;
+      return{x:m*m*m*eX+3*m*m*t*c1x+3*m*t*t*c2x+t*t*t*mX,
+             y:m*m*m*eY+3*m*m*t*c1y+3*m*t*t*c2y+t*t*t*mY};
     }
-    return {x, y};
+    const t=(pct-.5)*2,m=1-t;
+    return{x:m*m*m*mX+3*m*m*t*c3x+3*m*t*t*c4x+t*t*t*eX,
+           y:m*m*m*mY+3*m*m*t*c3y+3*m*t*t*c4y+t*t*t*eY};
   }
 
-  function draw(pct) {
-    if(W === 0 || H === 0) return;
-    const dpr = window.devicePixelRatio || 1;
-    // CRITICAL: use setTransform (not scale) so it doesn't compound
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Always fill background first
-    ctx.fillStyle = '#000610';
-    ctx.fillRect(0, 0, W, H);
+  // Draw
+  function draw(pct){
+    if(_W===0||_H===0) return;
 
-    const eX = W*0.18, eY = H*0.52;
-    const mX = W*0.82, mY = H*0.52;
-    const cp1X=W*0.35,cp1Y=H*0.08, cp2X=W*0.65,cp2Y=H*0.08;
-    const cp3X=W*0.65,cp3Y=H*0.92, cp4X=W*0.35,cp4Y=H*0.92;
+    // CRITICAL: setTransform resets transform without accumulating
+    ctx.setTransform(_dpr,0,0,_dpr,0,0);
 
-    // Background stars
-    for(let i=0;i<80;i++){
-      const sx=((i*137.5+23)%1)*W, sy=((i*97.3+11)%1)*H;
-      const sr=0.4+((i*0.13)%0.8);
-      ctx.beginPath();ctx.arc(sx,sy,sr,0,6.28);
-      ctx.fillStyle=`rgba(255,220,180,${0.15+((i*0.07)%0.35)})`;ctx.fill();
-    }
+    // Background
+    ctx.fillStyle='#000610';
+    ctx.fillRect(0,0,_W,_H);
 
-    // ── Draw FULL path first (dim) ──
-    const steps = 120;
+    const eX=_W*0.17, eY=_H*0.52;
+    const mX=_W*0.83, mY=_H*0.52;
+    const c1x=_W*0.35,c1y=_H*0.07;
+    const c2x=_W*0.65,c2y=_H*0.07;
+    const c3x=_W*0.65,c3y=_H*0.93;
+    const c4x=_W*0.35,c4y=_H*0.93;
 
-    // Outbound dim
-    ctx.save();ctx.setLineDash([4,8]);ctx.strokeStyle='rgba(255,140,0,0.12)';ctx.lineWidth=2;
-    ctx.beginPath();
-    for(let i=0;i<=steps;i++){
-      const t=i/steps,mt=1-t;
-      const x=mt*mt*mt*eX+3*mt*mt*t*cp1X+3*mt*t*t*cp2X+t*t*t*mX;
-      const y=mt*mt*mt*eY+3*mt*mt*t*cp1Y+3*mt*t*t*cp2Y+t*t*t*mY;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-    // Return dim
-    ctx.beginPath();
-    for(let i=0;i<=steps;i++){
-      const t=i/steps,mt=1-t;
-      const x=mt*mt*mt*mX+3*mt*mt*t*cp3X+3*mt*t*t*cp4X+t*t*t*eX;
-      const y=mt*mt*mt*mY+3*mt*mt*t*cp3Y+3*mt*t*t*cp4Y+t*t*t*eY;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    }
-    ctx.stroke();
+    // ── Dim full paths ──
+    ctx.save();ctx.setLineDash([5,10]);ctx.lineWidth=1.5;
+    ctx.strokeStyle='rgba(255,140,0,0.1)';
+    ctx.beginPath();ctx.moveTo(eX,eY);
+    ctx.bezierCurveTo(c1x,c1y,c2x,c2y,mX,mY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(mX,mY);
+    ctx.bezierCurveTo(c3x,c3y,c4x,c4y,eX,eY);ctx.stroke();
     ctx.restore();
 
-    // ── Draw TRAVELED path with gradient ──
-    ctx.save();ctx.setLineDash([]);ctx.lineWidth=3;
-    const COLORS=['#ff4500','#ff6a00','#ff8c00','#ffb700','#ffd60a','#aaff44','#44ffaa','#00d4ff','#4dabf7','#8855ff','#cc44ff'];
-
-    const totalSteps = Math.round(pct * steps * 2);
+    // ── Traveled path with gradient ──
+    const STEPS=150;
+    const totalSteps=Math.round(pct*STEPS*2);
+    ctx.setLineDash && ctx.setLineDash([]);
+    ctx.lineWidth=3;
     for(let i=0;i<totalSteps;i++){
-      const segPct = i / (steps*2);
-      const nextPct = (i+1) / (steps*2);
-      const colorIdx = Math.min(Math.floor(segPct * COLORS.length), COLORS.length-2);
-      const grad = ctx.createLinearGradient(0,0,W,0);
-      grad.addColorStop(0, COLORS[colorIdx]);
-      grad.addColorStop(1, COLORS[colorIdx+1] || COLORS[colorIdx]);
-      ctx.strokeStyle = COLORS[colorIdx];
-      ctx.globalAlpha = 0.85;
-
-      const p1 = getPathPoint(segPct, W, H);
-      const p2 = getPathPoint(Math.min(nextPct, pct), W, H);
-      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+      const a=i/(STEPS*2),b=Math.min((i+1)/(STEPS*2),pct);
+      const ci=Math.min(Math.floor((i/(STEPS*2))*GCOLORS.length),GCOLORS.length-2);
+      const pa=pt(a),pb=pt(b);
+      ctx.strokeStyle=GCOLORS[ci];
+      ctx.globalAlpha=0.85;
+      ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
     }
     ctx.globalAlpha=1;
-    ctx.restore();
 
     // ── EARTH ──
-    const eR = Math.min(W,H)*0.13;
-    // Outer atmosphere
-    const eAtmo=ctx.createRadialGradient(eX,eY,eR*0.7,eX,eY,eR*1.5);
-    eAtmo.addColorStop(0,'rgba(30,100,255,0.12)');eAtmo.addColorStop(1,'transparent');
-    ctx.beginPath();ctx.arc(eX,eY,eR*1.5,0,6.28);ctx.fillStyle=eAtmo;ctx.fill();
-    // Core
-    const eCore=ctx.createRadialGradient(eX-eR*0.3,eY-eR*0.3,0,eX,eY,eR);
-    eCore.addColorStop(0,'#1e88e5');eCore.addColorStop(0.4,'#0d47a1');eCore.addColorStop(1,'#001a4d');
-    ctx.beginPath();ctx.arc(eX,eY,eR,0,6.28);ctx.fillStyle=eCore;ctx.fill();
-    // Land patches
+    const eR=Math.min(_W,_H)*0.12;
+    const eg=ctx.createRadialGradient(eX,eY,0,eX,eY,eR*1.5);
+    eg.addColorStop(0,'rgba(30,100,255,0.12)');eg.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(eX,eY,eR*1.5,0,6.28);ctx.fillStyle=eg;ctx.fill();
+    const ec=ctx.createRadialGradient(eX-eR*0.3,eY-eR*0.3,0,eX,eY,eR);
+    ec.addColorStop(0,'#1e88e5');ec.addColorStop(0.5,'#0d47a1');ec.addColorStop(1,'#001a4d');
+    ctx.beginPath();ctx.arc(eX,eY,eR,0,6.28);ctx.fillStyle=ec;ctx.fill();
+    // Land
     ctx.save();ctx.beginPath();ctx.arc(eX,eY,eR,0,6.28);ctx.clip();
-    [[eX-eR*0.1,eY-eR*0.3,eR*0.35],[eX+eR*0.3,eY+eR*0.1,eR*0.25],[eX-eR*0.35,eY+eR*0.2,eR*0.2],[eX+eR*0.05,eY-eR*0.55,eR*0.15]].forEach(([lx,ly,lr])=>{
-      ctx.beginPath();ctx.arc(lx,ly,lr,0,6.28);ctx.fillStyle='rgba(34,120,34,0.55)';ctx.fill();
+    [[eX-eR*.1,eY-eR*.3,eR*.35],[eX+eR*.3,eY+eR*.1,eR*.25],[eX-eR*.35,eY+eR*.2,eR*.2]].forEach(([lx,ly,lr])=>{
+      ctx.beginPath();ctx.arc(lx,ly,lr,0,6.28);ctx.fillStyle='rgba(34,120,34,0.5)';ctx.fill();
     });
     ctx.restore();
-    // Atmosphere rim
-    const eRim=ctx.createRadialGradient(eX,eY,eR*0.85,eX,eY,eR);
-    eRim.addColorStop(0,'transparent');eRim.addColorStop(1,'rgba(100,180,255,0.3)');
-    ctx.beginPath();ctx.arc(eX,eY,eR,0,6.28);ctx.fillStyle=eRim;ctx.fill();
-    // Label
-    ctx.fillStyle='rgba(232,213,176,0.35)';ctx.font=`bold 10px 'Share Tech Mono',monospace`;ctx.textAlign='center';
-    ctx.fillText('EARTH',eX,eY+eR*1.3);
+    // Atmo rim
+    const er=ctx.createRadialGradient(eX,eY,eR*.85,eX,eY,eR);
+    er.addColorStop(0,'transparent');er.addColorStop(1,'rgba(80,160,255,0.28)');
+    ctx.beginPath();ctx.arc(eX,eY,eR,0,6.28);ctx.fillStyle=er;ctx.fill();
+    ctx.fillStyle='rgba(232,213,176,0.32)';ctx.font=`bold 10px 'Share Tech Mono',monospace`;ctx.textAlign='center';
+    ctx.fillText('EARTH',eX,eY+eR*1.28);
 
     // ── MOON ──
-    const mR = Math.min(W,H)*0.09;
-    const mGlow=ctx.createRadialGradient(mX,mY,mR*0.5,mX,mY,mR*1.8);
-    mGlow.addColorStop(0,'rgba(200,200,200,0.1)');mGlow.addColorStop(1,'transparent');
-    ctx.beginPath();ctx.arc(mX,mY,mR*1.8,0,6.28);ctx.fillStyle=mGlow;ctx.fill();
-    const mCore=ctx.createRadialGradient(mX-mR*0.2,mY-mR*0.2,0,mX,mY,mR);
-    mCore.addColorStop(0,'#cccccc');mCore.addColorStop(0.5,'#999');mCore.addColorStop(1,'#555');
-    ctx.beginPath();ctx.arc(mX,mY,mR,0,6.28);ctx.fillStyle=mCore;ctx.fill();
-    // Craters
+    const mR=Math.min(_W,_H)*0.085;
+    const mg=ctx.createRadialGradient(mX,mY,mR*.5,mX,mY,mR*1.7);
+    mg.addColorStop(0,'rgba(200,200,200,0.1)');mg.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(mX,mY,mR*1.7,0,6.28);ctx.fillStyle=mg;ctx.fill();
+    const mc=ctx.createRadialGradient(mX-mR*.2,mY-mR*.2,0,mX,mY,mR);
+    mc.addColorStop(0,'#cccccc');mc.addColorStop(0.5,'#999');mc.addColorStop(1,'#555');
+    ctx.beginPath();ctx.arc(mX,mY,mR,0,6.28);ctx.fillStyle=mc;ctx.fill();
     ctx.save();ctx.beginPath();ctx.arc(mX,mY,mR,0,6.28);ctx.clip();
-    [[mX+mR*0.2,mY-mR*0.3,mR*0.15],[mX-mR*0.3,mY+mR*0.15,mR*0.1],[mX+mR*0.05,mY+mR*0.4,mR*0.12]].forEach(([cx,cy,cr])=>{
+    [[mX+mR*.2,mY-mR*.3,mR*.15],[mX-mR*.3,mY+mR*.15,mR*.1]].forEach(([cx,cy,cr])=>{
       ctx.beginPath();ctx.arc(cx,cy,cr,0,6.28);ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fill();
-      ctx.beginPath();ctx.arc(cx-cr*0.2,cy-cr*0.2,cr*0.7,0,6.28);ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fill();
     });
     ctx.restore();
-    ctx.fillStyle='rgba(232,213,176,0.3)';ctx.font=`bold 9px 'Share Tech Mono',monospace`;ctx.textAlign='center';
-    ctx.fillText('MOON · 238,900 mi',mX,mY+mR*1.35);
+    ctx.fillStyle='rgba(232,213,176,0.28)';ctx.font=`bold 9px 'Share Tech Mono',monospace`;ctx.textAlign='center';
+    ctx.fillText('MOON · 238,900 mi',mX,mY+mR*1.32);
 
-    // ── MILESTONE LABELS on path ──
-    MILESTONES.forEach(m => {
-      const pt = getPathPoint(m.pct, W, H);
-      const isPast = pct >= m.pct;
-      const alpha = isPast ? 0.9 : 0.3;
-      ctx.save();
-      // Dot
-      ctx.beginPath();ctx.arc(pt.x,pt.y,4,0,6.28);
-      ctx.fillStyle=isPast?m.color:'rgba(255,255,255,0.2)';
-      ctx.globalAlpha=alpha;ctx.fill();
-      // Label
-      const above = m.side==='above';
-      const lx=pt.x, ly=pt.y+(above?-14:14);
-      ctx.fillStyle=isPast?m.color:'rgba(200,200,200,0.3)';
+    // ── Milestone labels ──
+    ML.forEach(m=>{
+      const p=pt(m.p);
+      const past=pct>=m.p;
+      ctx.globalAlpha=past?0.9:0.25;
+      ctx.beginPath();ctx.arc(p.x,p.y,past?5:3.5,0,6.28);
+      ctx.fillStyle=past?m.c:'rgba(255,255,255,0.3)';ctx.fill();
+      ctx.fillStyle=past?m.c:'rgba(200,200,200,0.3)';
       ctx.font=`bold 8px 'Share Tech Mono',monospace`;ctx.textAlign='center';
-      ctx.fillText(m.label,lx,ly);
-      ctx.restore();
+      ctx.fillText(m.label,p.x,p.y+(m.above?-12:16));
+      ctx.globalAlpha=1;
     });
 
-    // ── ORION (scroll position) ──
-    const orionPt = getPathPoint(pct, W, H);
-    const oColorIdx = Math.min(Math.floor(pct * COLORS.length), COLORS.length-1);
-    const oColor = COLORS[oColorIdx];
-    // Glow
-    for(const [r,a] of [[24,0.15],[16,0.25],[10,0.5],[5,1.0]]){
-      ctx.beginPath();ctx.arc(orionPt.x,orionPt.y,r,0,6.28);
-      ctx.fillStyle=oColor;ctx.globalAlpha=a;ctx.fill();
-    }
+    // ── Orion (scroll position) ──
+    const op=pt(pct);
+    const ci=Math.min(Math.floor(pct*GCOLORS.length),GCOLORS.length-1);
+    const oc=GCOLORS[ci];
+    [[22,0.12],[15,0.25],[9,0.55],[4.5,1]].forEach(([r,a])=>{
+      ctx.beginPath();ctx.arc(op.x,op.y,r,0,6.28);
+      ctx.fillStyle=oc;ctx.globalAlpha=a;ctx.fill();
+    });
     ctx.globalAlpha=1;
 
     // ── LIVE NOW dot ──
-    const now=new Date(),met=now-LAUNCH,totalMs=SPLASH-LAUNCH;
-    const livePct=Math.min(0.999,Math.max(0,(met/totalMs)));
-    const livePt=getPathPoint(livePct,W,H);
-    const pulse=0.7+0.3*Math.sin(Date.now()/300);
-    ctx.beginPath();ctx.arc(livePt.x,livePt.y,10*pulse,0,6.28);
-    ctx.fillStyle='rgba(0,255,136,0.2)';ctx.fill();
-    ctx.beginPath();ctx.arc(livePt.x,livePt.y,5,0,6.28);
-    ctx.fillStyle='#00ff88';ctx.globalAlpha=1;ctx.fill();
-    // LIVE label
-    const liveAbove=livePt.y>H/2;
-    ctx.fillStyle='#00ff88';ctx.font=`bold 9px 'Share Tech Mono',monospace`;ctx.textAlign='left';
-    ctx.fillText('● LIVE NOW',livePt.x+10,livePt.y+(liveAbove?-6:12));
+    const now=new Date(),met=now-LAUNCH,total=SPLASH-LAUNCH;
+    const lp=Math.min(0.999,Math.max(0,met/total));
+    const lpt=pt(lp);
+    const pulse=0.7+0.3*Math.sin(Date.now()/320);
+    ctx.beginPath();ctx.arc(lpt.x,lpt.y,11*pulse,0,6.28);
+    ctx.fillStyle='rgba(0,255,136,0.18)';ctx.fill();
+    ctx.beginPath();ctx.arc(lpt.x,lpt.y,5,0,6.28);
+    ctx.fillStyle='#00ff88';ctx.fill();
+    const above=lpt.y>_H*0.5;
+    ctx.fillStyle='rgba(0,255,136,0.85)';
+    ctx.font=`bold 9px 'Share Tech Mono',monospace`;ctx.textAlign='left';
+    ctx.fillText('● LIVE NOW',lpt.x+9,lpt.y+(above?-8:14));
     const{d}=getDist(now);
-    ctx.fillStyle='rgba(0,255,136,0.6)';ctx.font=`8px 'Share Tech Mono',monospace`;
-    ctx.fillText(`${Math.round(d*0.621371/1000).toFixed(0)}K mi from Earth`,livePt.x+10,livePt.y+(liveAbove?-16:24));
+    ctx.fillStyle='rgba(0,255,136,0.55)';
+    ctx.font=`8px 'Share Tech Mono',monospace`;
+    ctx.fillText(`${Math.round(d*0.621371/1000)}K mi from Earth`,lpt.x+9,lpt.y+(above?-19:25));
   }
 
-  // Scroll handler
+  // Scroll
   function onScroll(){
-    const rect=outer.getBoundingClientRect();
-    const spacer=outer.querySelector('.traj-stages-spacer');
-    if(!spacer)return;
-    const scrollable=spacer.getBoundingClientRect().height;
+    const rect=wrap.getBoundingClientRect();
+    const sh=spacer.getBoundingClientRect().height;
     const scrolled=Math.max(0,-rect.top);
-    targetPct=Math.min(1,Math.max(0,scrolled/scrollable));
+    targetPct=Math.min(1,Math.max(0,scrolled/sh));
 
-    document.getElementById('trajScrollPct').textContent=`Scroll: ${Math.round(targetPct*100)}%`;
+    // Update bottom bar
+    const{d,v}=getDist(new Date());
+    const ip=Math.round(d*0.621371/1000);
+    document.getElementById('trajLive').textContent=`${ip}K mi`;
+    document.getElementById('trajScroll').textContent=`Scroll: ${Math.round(targetPct*100)}%`;
 
     // Update side panel
-    const info=getPanelForPct(targetPct);
-    document.getElementById('tspStage').textContent=info.stage;
-    document.getElementById('tspTitle').textContent=info.title;
-    document.getElementById('tspDesc').textContent=info.desc;
-    document.getElementById('tspV1').textContent=info.v1;
-    document.getElementById('tspV2').textContent=info.v2;
-    document.getElementById('trajPanel').querySelector('.tsp-stat:first-child .tsp-sl').textContent=info.l1;
-    document.getElementById('trajPanel').querySelector('.tsp-stat:last-child .tsp-sl').textContent=info.l2;
-
-    // Live dist
-    const{d}=getDist(new Date());
-    document.getElementById('trajLiveDist').textContent=`${(d*0.621371/1000).toFixed(0)}K mi`;
+    const panel=getPanel(targetPct);
+    document.getElementById('tsStage').textContent=panel.stage;
+    document.getElementById('tsTitle').textContent=panel.title;
+    document.getElementById('tsDesc').textContent=panel.desc;
+    document.getElementById('tsV1').textContent=panel.v1;
+    document.getElementById('tsL1').textContent=panel.l1;
+    document.getElementById('tsV2').textContent=panel.v2;
+    document.getElementById('tsL2').textContent=panel.l2;
   }
-
   window.addEventListener('scroll',onScroll,{passive:true});
   onScroll();
 
+  // Animation loop
   let last=0;
-  function animate(ts){
+  function loop(ts){
     if(ts-last>16){
       animPct+=(targetPct-animPct)*0.07;
       draw(animPct);
       last=ts;
     }
-    requestAnimationFrame(animate);
+    requestAnimationFrame(loop);
   }
-  requestAnimationFrame(animate);
+  requestAnimationFrame(loop);
 })();
 
+/* ══ MAIN DATA TICK ══ */
+let viewers=38+Math.floor(Math.random()*25);
+setInterval(()=>{viewers+=Math.floor(Math.random()*5)-2;viewers=Math.max(12,Math.min(200,viewers));},9000);
 
-
-// ══ EMAIL ══
-function handleEmailSubmit(e){
-  e.preventDefault();
-  const btn=e.target.querySelector('.email-btn');
-  btn.textContent='✅ SUBSCRIBED!';btn.style.background='var(--green)';btn.style.color='#000';
-  setTimeout(()=>{btn.textContent='SUBSCRIBE';btn.style.background='';btn.style.color='';},3000);
-}
-
-// ══ MAIN TICK ══
 function tick(){
   const now=new Date();
-  const met=now-LAUNCH;if(met<0)return;
+  const met=now-LAUNCH;
+  if(met<0) return;
   const{d,v}=getDist(now);
   const phase=getPhase(now);
-  const toMoon=Math.max(0,MOON_KM-d);
-  const totalMs=SPLASH-LAUNCH;
-  const pct=Math.min(100,Math.max(0,(met/totalMs)*100));
+  const toMoon=Math.max(0,MOON-d);
+  const pct=Math.min(100,Math.max(0,(met/(SPLASH-LAUNCH))*100));
   const delay=(d/C).toFixed(2);
-  const vkmh=v*3600,vmph=vkmh/1.60934;
+  const vkmh=v*3600, vmph=vkmh/1.60934;
 
-  // Topbar clock
+  // Nav
   const h=now.getUTCHours(),m=now.getUTCMinutes(),s=now.getUTCSeconds();
-  document.getElementById('utcClock').textContent=`UTC ${pad(h)}:${pad(m)}:${pad(s)} · ${now.toISOString().slice(0,10)}`;
+  document.getElementById('navPhase').textContent=phase.split('·')[0].trim().slice(0,14);
+  document.getElementById('navMet').textContent=`${Math.floor(met/86400000)}d${pad(h)}:${pad(m)}`;
+  document.getElementById('navSpd').textContent=`${Math.round(vmph/1000)}K mph`;
+  document.getElementById('navDist').textContent=`${Math.round(d*0.621371/1000)}K mi`;
+  document.getElementById('navWatch').textContent=viewers;
   document.getElementById('dayNum').textContent=Math.floor(met/86400000)+1;
 
-  // Stats strip
-  document.getElementById('ssDist').textContent=fmt(d);
-  document.getElementById('ssDistMi').textContent=`${fmt(Math.round(d*0.621371))} miles`;
-  document.getElementById('ssSpd').textContent=v.toFixed(3);
-  document.getElementById('ssSpdMph').textContent=fmt(Math.round(vmph));
-  document.getElementById('ssMet').textContent=formatMET(met);
-  document.getElementById('ssToMoon').textContent=fmt(toMoon);
+  // Hero
+  document.getElementById('hdKm').textContent=fmt(d);
+  document.getElementById('hdMi').textContent=`${fmt(Math.round(d*0.621371))} miles from Earth`;
+  document.getElementById('phaseText').textContent=phase;
 
   // Journey
   document.getElementById('jFill').style.width=pct+'%';
@@ -933,35 +1469,40 @@ function tick(){
   document.getElementById('jMet').textContent=formatMET(met);
   document.getElementById('jSig').textContent=delay+'s';
   document.getElementById('jSpd').textContent=fmt(Math.round(vkmh));
-  document.getElementById('phaseText').textContent=phase;
 
-  // Signal
-  document.getElementById('sigVal').textContent=delay;
-  document.getElementById('sigSec').textContent=delay;
-  const maxDelay=MOON_KM/C;
-  document.getElementById('sigBar').style.width=Math.min((d/C/maxDelay)*100,100)+'%';
-  document.getElementById('sigBarV').textContent=delay+'s';
+  // Stats
+  document.getElementById('s1').textContent=fmt(d);
+  document.getElementById('s1u').textContent=`${fmt(Math.round(d*0.621371))} miles`;
+  document.getElementById('s2').textContent=v.toFixed(3);
+  document.getElementById('s2u').textContent=`${fmt(Math.round(vkmh))} km/h`;
+  document.getElementById('s3').textContent=formatMET(met);
+  document.getElementById('s4').textContent=fmt(toMoon);
 
   // Countdown
   const rem=SPLASH-now;
-  if(rem>0){const rs=Math.floor(rem/1000);document.getElementById('cdD').textContent=pad(Math.floor(rs/86400));document.getElementById('cdH').textContent=pad(Math.floor((rs%86400)/3600));document.getElementById('cdM').textContent=pad(Math.floor((rs%3600)/60));document.getElementById('cdS').textContent=pad(rs%60);}
+  if(rem>0){
+    const rs=Math.floor(rem/1000);
+    document.getElementById('cdD').textContent=pad(Math.floor(rs/86400));
+    document.getElementById('cdH').textContent=pad(Math.floor((rs%86400)/3600));
+    document.getElementById('cdM').textContent=pad(Math.floor((rs%3600)/60));
+    document.getElementById('cdS').textContent=pad(rs%60);
+  }
+
+  // Signal
+  document.getElementById('sigNum').textContent=delay;
+  document.getElementById('sigStrong').textContent=delay;
+  document.getElementById('sigBar').style.width=Math.min((d/C/(MOON/C))*100,100)+'%';
+  document.getElementById('sigBarV').textContent=delay+'s';
 
   // Record
   document.getElementById('recDist').textContent=fmt(d);
-  if(d>248655){document.getElementById('recBadge').textContent='🏆 RECORD BROKEN! +'+fmt(d-248655)+' km beyond Apollo 13';document.getElementById('recBadge').style.background='rgba(255,214,10,0.15)';}
-
-  // Sticky nav bar
-  if(document.getElementById('snPhase')){
-    document.getElementById('snPhase').textContent=phase.split('·')[0].trim().slice(0,15);
-    document.getElementById('snMet').textContent=formatMET(met);
-    document.getElementById('snSpd').textContent=fmt(Math.round(vmph))+' mph';
-    document.getElementById('snDist').textContent=fmt(Math.round(d*0.621371/1000))+'K mi';
-    document.getElementById('snDay').textContent=Math.floor(met/86400000)+1;
-    document.getElementById('snWatch').textContent=viewers;
+  if(d>248655){
+    document.getElementById('recBadge').textContent='🏆 RECORD BROKEN! +'+fmt(d-248655)+' km beyond Apollo 13';
+    document.getElementById('recBadge').style.background='rgba(255,214,10,0.15)';
   }
 }
-
-tick();setInterval(tick,1000);
+tick();
+setInterval(tick,1000);
 </script>
 </body>
 </html>
