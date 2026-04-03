@@ -88,9 +88,9 @@ h1{font-family:var(--display);font-size:clamp(36px,8vw,72px);font-weight:900;let
 /* ── SCROLL TRAJECTORY ── */
 .traj-section{margin:0 0 30px}
 .traj-intro{text-align:center;padding:14px;font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--dim);margin-bottom:0}
-.traj-outer{position:relative;background:#000610;overflow:hidden}
-.traj-sticky{position:sticky;top:36px;height:calc(100vh - 36px);max-height:560px;overflow:hidden}
-#trajCanvas{width:100%;height:100%;display:block;cursor:default}
+.traj-outer{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw;background:#000610;overflow:hidden}
+.traj-sticky{position:sticky;top:36px;height:calc(100vh - 36px);max-height:600px;overflow:hidden;background:#000610}
+#trajCanvas{width:100%;height:100%;display:block;background:#000610}
 .traj-side-panel{
   position:absolute;left:16px;top:50%;transform:translateY(-50%);
   width:220px;background:rgba(0,8,20,0.88);
@@ -680,13 +680,16 @@ window.toggleStage=function(i){
   }
 
   function draw(pct) {
-    const W = canvas.offsetWidth, H = canvas.offsetHeight;
-    canvas.width  = W * window.devicePixelRatio;
-    canvas.height = H * window.devicePixelRatio;
+    const W = window.innerWidth;
+    const H = Math.min(window.innerHeight - 36, 600);
+    if(W === 0 || H === 0) return;
+    canvas.width  = W * (window.devicePixelRatio||1);
+    canvas.height = H * (window.devicePixelRatio||1);
     canvas.style.width  = W + 'px';
     canvas.style.height = H + 'px';
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    ctx.clearRect(0, 0, W, H);
+    ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+    ctx.fillStyle = '#000610';
+    ctx.fillRect(0, 0, W, H);
 
     const eX = W*0.18, eY = H*0.52;
     const mX = W*0.82, mY = H*0.52;
@@ -876,7 +879,7 @@ window.toggleStage=function(i){
     requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
-  window.addEventListener('resize',()=>draw(animPct));
+  window.addEventListener('resize',()=>{ animPct=targetPct; draw(animPct); });
 })();
 
 
