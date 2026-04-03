@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Artémis II en Direct — Suivi Mission Lunaire</title>
-<meta name="description" content="Track NASA's Artemis II live. Real-time distance, speed, signal delay, DSN, scroll trajectory, 12 mission stages and more.">
+<title>Artémis II en Direct — Contrôle Mission</title>
+<meta name="description" content="Suivez Artémis II de la NASA en direct. Real-time distance, speed, signal delay, DSN, scroll trajectory, 12 mission stages and more.">
 <meta property="og:title" content="Artemis II Live — Mission Control">
 <meta property="og:description" content="Humanity's return to the Moon — live tracking, scroll trajectory, 12 mission stages.">
 <meta name="theme-color" content="#000913">
@@ -736,9 +736,9 @@ footer p{
   <!-- ══ JOURNEY BAR ══ -->
   <div class="journey">
     <div class="j-head">
-      <span>🌍 EARTH</span>
+      <span>🌍 TERRE</span>
       <span id="jPct" style="color:var(--orange)">0%</span>
-      <span>🌕 MOON &amp; BACK</span>
+      <span>🌕 LUNE &amp; RETOUR</span>
     </div>
     <div class="j-bar"><div class="j-fill" id="jFill" style="width:0%"></div></div>
     <div class="j-info">
@@ -752,15 +752,15 @@ footer p{
   <div class="stats4">
     <div class="sc"><div class="sc-l">Distance · km</div><div class="sc-v" id="s1">---</div><div class="sc-u" id="s1u">--- miles</div></div>
     <div class="sc"><div class="sc-l">Speed</div><div class="sc-v" id="s2">---</div><div class="sc-u" id="s2u">--- km/h</div></div>
-    <div class="sc"><div class="sc-l">Temps Mission</div><div class="sc-v" id="s3" style="font-size:14px">---</div><div class="sc-u">elapsed</div></div>
-    <div class="sc"><div class="sc-l">Vers Lune</div><div class="sc-v" id="s4">---</div><div class="sc-u">kilometers</div></div>
+    <div class="sc"><div class="sc-l">Temps Mission</div><div class="sc-v" id="s3" style="font-size:14px">---</div><div class="sc-u">écoulé</div></div>
+    <div class="sc"><div class="sc-l">Vers Lune</div><div class="sc-v" id="s4">---</div><div class="sc-u">kilomètres</div></div>
   </div>
 
   <!-- ══ SPLASHDOWN COUNTDOWN ══ -->
   <div class="countdown">
     <div class="cd-label">⏱ Compte à Rebours Amerrissage · ~11 Avril 2026</div>
     <div class="cd-nums">
-      <div class="cd-unit"><div class="cd-n" id="cdD">--</div><div class="cd-l">DAYS</div></div>
+      <div class="cd-unit"><div class="cd-n" id="cdD">--</div><div class="cd-l">JOURS</div></div>
       <div class="cd-sep">:</div>
       <div class="cd-unit"><div class="cd-n" id="cdH">--</div><div class="cd-l">HRS</div></div>
       <div class="cd-sep">:</div>
@@ -804,11 +804,11 @@ footer p{
   <div class="sec">Délai Signal &amp; Réseau DSN</div>
   <div class="two-col">
     <div class="card">
-      <div class="card-title">📡 ONE-WAY SIGNAL DELAY</div>
+      <div class="card-title">📡 DÉLAI SIGNAL ALLER SIMPLE</div>
       <div class="sig-num"><span id="sigNum">---</span>s</div>
       <div class="sig-desc">
-        Radio signals travel at 299,792 km/s — Orion hears mission control
-        <strong id="sigStrong" style="color:var(--blue)">---</strong> seconds after they speak
+        Les signaux radio voyagent à 299 792 km/s — Orion entend le contrôle
+        <strong id="sigStrong" style="color:var(--blue)">---</strong> secondes plus tard
       </div>
       <div class="sig-bars">
         <div class="sb">
@@ -830,7 +830,7 @@ footer p{
     </div>
     <div class="card">
       <div class="card-title">
-        🛰️ NASA DSN GROUND STATIONS
+        🛰️ STATIONS SOL NASA DSN
         <span id="dsnLive" style="color:var(--green);font-size:8px">● LIVE</span>
       </div>
       <div class="dsn-list">
@@ -867,17 +867,17 @@ footer p{
     <div class="record-row">
       <div class="record-icon">🏆</div>
       <div class="record-info">
-        <div class="record-sub">Apollo 13 Record (1970) — 248,655 km</div>
-        <div class="record-main">Artemis II targets 252,021 km — a 54-year record</div>
+        <div class="record-sub">Record Apollo 13 (1970) — 248 655 km</div>
+        <div class="record-main">Artémis II vise 252 021 km — un record vieux de 54 ans</div>
         <div class="record-desc">
           Victor Glover — first person of color beyond LEO.
           Christina Koch — first woman. Jeremy Hansen — first non-American in deep space.
         </div>
-        <div class="record-badge" id="recBadge">⏳ RECORD BREAK INCOMING</div>
+        <div class="record-badge" id="recBadge">⏳ RECORD À BATTRE</div>
       </div>
       <div>
         <div class="record-num" id="recDist">---</div>
-        <div class="record-num-l">km current</div>
+        <div class="record-num-l">km actuel</div>
       </div>
     </div>
   </div>
@@ -930,7 +930,7 @@ footer p{
   <div class="sec">Couverture NASA en Direct</div>
   <div class="stream">
     <div class="stream-head">
-      🛸 ORION LIVE FEED — NASA OFFICIAL BROADCAST
+      🛸 ORION EN DIRECT — DIFFUSION OFFICIELLE NASA
       <div class="live-dot" style="margin-left:auto"></div>
     </div>
     <div class="stream-body">
@@ -947,14 +947,14 @@ footer p{
   <!-- ══ FACTS ══ -->
   <div class="sec">Faits de Mission</div>
   <div class="facts">
-    <div class="fact"><div class="fact-i">🚀</div><div class="fact-t"><strong>Launch</strong>Apr 1, 2026 · 22:35 UTC · KSC LC-39B · SLS rocket</div></div>
-    <div class="fact"><div class="fact-i">📏</div><div class="fact-t"><strong>Max Distance</strong>252,021 km — breaking Apollo 13's 54-year record</div></div>
-    <div class="fact"><div class="fact-i">🌕</div><div class="fact-t"><strong>Lunar Flyby</strong>~4,000 miles above far side · No landing · Free-return</div></div>
-    <div class="fact"><div class="fact-i">🏁</div><div class="fact-t"><strong>Splashdown</strong>~Apr 11 · Pacific Ocean · 40,200 km/h reentry</div></div>
-    <div class="fact"><div class="fact-i">🛸</div><div class="fact-t"><strong>Orion "Integrity"</strong>First crewed Orion flight · 4 crew · 10 days</div></div>
-    <div class="fact"><div class="fact-i">🌡️</div><div class="fact-t"><strong>Heat Shield</strong>5,000°F on reentry — half as hot as the Sun's surface</div></div>
-    <div class="fact"><div class="fact-i">⚡</div><div class="fact-t"><strong>SLS Power</strong>8.8 million lbs of thrust — most powerful NASA rocket ever</div></div>
-    <div class="fact"><div class="fact-i">🛡️</div><div class="fact-t"><strong>Skip Reentry</strong>Orion bounces off atmosphere once to reduce G-forces to 4G</div></div>
+    <div class="fact"><div class="fact-i">🚀</div><div class="fact-t"><strong>Launch</strong>1er Avr 2026 · 22h35 UTC · KSC LC-39B · Fusée SLS</div></div>
+    <div class="fact"><div class="fact-i">📏</div><div class="fact-t"><strong>Max Distance</strong>252 021 km — battant le record d'Apollo 13 (54 ans)</div></div>
+    <div class="fact"><div class="fact-i">🌕</div><div class="fact-t"><strong>Lunar Flyby</strong>~6 400 km au-dessus de la face cachée · Sans atterrissage</div></div>
+    <div class="fact"><div class="fact-i">🏁</div><div class="fact-t"><strong>Splashdown</strong>~11 Avr · Océan Pacifique · 40 200 km/h rentrée</div></div>
+    <div class="fact"><div class="fact-i">🛸</div><div class="fact-t"><strong>Orion "Integrity"</strong>Premier vol habité d'Orion · 4 astronautes · 10 jours</div></div>
+    <div class="fact"><div class="fact-i">🌡️</div><div class="fact-t"><strong>Heat Shield</strong>2 760°C à la rentrée — moitié de la surface du Soleil</div></div>
+    <div class="fact"><div class="fact-i">⚡</div><div class="fact-t"><strong>SLS Power</strong>8,8 millions de livres de poussée — la plus puissante fusée NASA</div></div>
+    <div class="fact"><div class="fact-i">🛡️</div><div class="fact-t"><strong>Skip Reentry</strong>Orion rebondit sur l'atmosphère pour réduire les forces à 4G</div></div>
   </div>
 
   <!-- ══ UPCOMING ══ -->
@@ -962,17 +962,17 @@ footer p{
   <div class="upcoming">
     <div class="uc">
       <div class="uc-name">ARTEMIS III</div>
-      <div class="uc-desc">First lunar landing since Apollo — first woman on the Moon</div>
+      <div class="uc-desc">Premier atterrissage lunaire depuis Apollo — première femme sur la Lune</div>
       <div class="uc-date">TBD · 2028</div>
     </div>
     <div class="uc">
       <div class="uc-name">ARTEMIS IV</div>
-      <div class="uc-desc">First crew to Lunar Gateway space station</div>
+      <div class="uc-desc">Premier équipage à la station Lunar Gateway</div>
       <div class="uc-date">TBD · 2029</div>
     </div>
     <div class="uc">
       <div class="uc-name">ARTEMIS V</div>
-      <div class="uc-desc">Sustained lunar presence begins</div>
+      <div class="uc-desc">Début de la présence lunaire permanente</div>
       <div class="uc-date">TBD · 2030+</div>
     </div>
   </div>
@@ -988,9 +988,9 @@ footer p{
       <a class="foot-link" href="https://github.com/aaka3h/artemis2live" target="_blank">💻 GitHub</a>
     </div>
     <p>
-      Suivi du retour de l'humanité sur la Lune · Données NASA<br>
+      Suivi du retour de l'humanité sur la Lune · Données paramètres de mission NASA<br>
       Projet éducatif indépendant · Non affilié à la NASA ·
-      <a href="index.html" style="color:var(--orange)">🇫🇷 Version anglaise →</a>
+      <a href="index.html" style="color:var(--orange)">🇫🇷 French version →</a>
     </p>
   </footer>
 
@@ -1094,7 +1094,7 @@ const NEWS=[
   {s:'NASA',t:'Artémis II quitte l'orbite terrestre en route pour la Lune',a:'11h ago',u:'https://www.nasa.gov/artemis'},
   {s:'Space.com',t:'Artémis 2 : brûlure TLI réussie — cap sur la Lune',a:'14h ago',u:'https://www.space.com/artemis'},
   {s:'CNN',t:'4 astronautes en route pour la Lune pour la 1ère fois en 53 ans',a:'1d ago',u:'https://www.cnn.com/2026/04/01/science/live-news/artemis-2-nasa-launch'},
-  {s:'CSA',t:'Jeremy Hansen devient le premier Canadien en espace lointain',a:'1d ago',u:'https://www.asc-csa.gc.ca/'},
+  {s:'CSA',t:'Jeremy Hansen — premier Canadien en espace lointain',a:'1d ago',u:'https://www.asc-csa.gc.ca/'},
   {s:'NASA',t:'L'équipage d'Artémis II complète la démonstration de proximité',a:'2d ago',u:'https://www.nasa.gov/artemis'},
   {s:'Scientific American',t:'Artémis II en route pour le survol lunaire du 7 avril',a:'9h ago',u:'https://www.scientificamerican.com/article/nasas-artemis-ii-mission-is-officially-on-track-for-the-moon/'},
 ];
@@ -1186,9 +1186,9 @@ window.toggleStage=i=>{
 window.handleSub=e=>{
   e.preventDefault();
   const btn=e.target.querySelector('.email-btn');
-  btn.textContent='✅ S'ABONNERD!';
+  btn.textContent='✅ SUBSCRIBED!';
   btn.style.background='var(--green)';btn.style.color='#000';
-  setTimeout(()=>{btn.textContent='S'ABONNER';btn.style.background='';btn.style.color='';},3000);
+  setTimeout(()=>{btn.textContent='SUBSCRIBE';btn.style.background='';btn.style.color='';},3000);
 };
 
 /* ══════════════════════════════════════
@@ -1213,6 +1213,7 @@ window.handleSub=e=>{
     canvas.height = Math.round(_H * _dpr);
     canvas.style.width  = _W + 'px';
     canvas.style.height = _H + 'px';
+    // Explicitly set sticky zone height so canvas fills it
     const zone = canvas.parentElement;
     if(zone){ zone.style.height = _H + 'px'; zone.style.maxHeight = _H + 'px'; }
   }
