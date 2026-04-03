@@ -1213,6 +1213,9 @@ window.handleSub=e=>{
     canvas.height = Math.round(_H * _dpr);
     canvas.style.width  = _W + 'px';
     canvas.style.height = _H + 'px';
+    // Explicitly set sticky zone height so canvas fills it
+    const zone = canvas.parentElement;
+    if(zone){ zone.style.height = _H + 'px'; zone.style.maxHeight = _H + 'px'; }
   }
   resize();
   window.addEventListener('resize', resize);
@@ -1426,7 +1429,7 @@ window.handleSub=e=>{
   function loop(ts){
     if(ts-last>16){
       animPct+=(targetPct-animPct)*0.07;
-      draw(animPct);
+      try{ draw(animPct); }catch(e){ console.error('Draw error:',e); }
       last=ts;
     }
     requestAnimationFrame(loop);
